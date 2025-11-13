@@ -1,0 +1,871 @@
+/* Main.css */
+
+/* Importe a fonte Poppins se ainda não fez no arquivo global */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+/* Reset básico */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: #f4f7f6; /* Fundo geral da página */
+}
+
+/* --- Container Principal --- */
+.main-container {
+  display: flex;
+  gap: 24px;
+  padding: 24px;
+  min-height: calc(100vh - 80px); /* Ajusta para a altura da Navbar */
+  width: 100%;
+}
+
+.main-left-column {
+  flex: 1; /* Ocupa 2/3 da largura */
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.main-right-column {
+  flex: 1; /* Ocupa 1/3 da largura */
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* --- Placeholder de Vídeo --- */
+.video-placeholder {
+  background-color: #000000;
+  height: 550px; /* Altura ajustada para ser menor */
+  width: 100%;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* --- Seção de Controles (Pesquisa e Adicionar) --- */
+.controls-section {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.search-bar-wrapper { /* Novo wrapper para o input de pesquisa */
+  flex-grow: 1;
+  position: relative;
+  border: 1px solid #dfe1e5; /* Borda visível */
+  border-radius: 8px;
+  background-color: #ffffff; /* Fundo branco */
+  display: flex;
+  align-items: center;
+  padding-left: 12px;
+}
+
+
+
+.search-bar-wrapper .search-icon {
+  color: #aaa;
+  font-size: 1.2rem;
+  margin-right: 8px; /* Espaço entre o ícone e o input */
+}
+
+.search-bar-wrapper input {
+  flex-grow: 1;
+  padding: 10px 0; /* Ajustado */
+  border: none; /* Remove a borda do input interno */
+  outline: none;
+  font-size: 1rem;
+  font-family: 'Poppins', sans-serif;
+  color: #333;
+  background-color: transparent; /* Fundo transparente */
+}
+
+.search-bar-wrapper input::placeholder {
+  color: #aaa;
+}
+
+.add-button {
+  background-color: #002a8d; /* Azul escuro */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px; /* Ajustado */
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.add-button:hover {
+  background-color: #001f6a;
+}
+
+/* --- LISTA DE ESTAÇÕES --- */
+.station-list-wrapper {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 16px 0; /* Padding vertical apenas */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.station-list-header {
+  display: flex;
+  justify-content: space-between;
+  color: #8a8a8a;
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0 30px 10px 30px; /* Padding ajustado para o cabeçalho */
+}
+
+.station-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.station-list-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 0; /* Padding vertical */
+  border-bottom: 1px solid #f0f0f0;
+  gap: 10px;
+  position: relative; /* Para a linha colorida */
+}
+
+.station-list-item:last-child {
+  border-bottom: none;
+}
+
+.station-line-color-indicator {
+  width: 4px; /* Mais fino */
+  height: 100%; /* Ocupa toda a altura do item */
+  min-height: 40px; /* Garante uma altura mínima */
+  position: absolute; /* Posição absoluta */
+  left: 0;
+  top: 0;
+  border-radius: 2px;
+  background-color: gray; /* Cor padrão caso lineColor não seja definida */
+}
+
+.station-details {
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  padding-left: 30px; /* Espaço para a linha colorida */
+}
+
+.station-name {
+  display: block;
+  color: #222;
+  font-weight: 600;
+  line-height: 1.2; /* Ajuste para não quebrar a linha */
+}
+
+.station-line {
+  color: #777;
+  font-size: 0.9rem;
+  text-align: start;
+}
+
+.station-progress-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 150px; /* Largura fixa para a área de progresso */
+  font-size: 0.9rem;
+  color: #333;
+  font-weight: 500;
+  margin-right: 15px; /* Espaçamento da direita */
+}
+
+.progress-percentage {
+  flex-shrink: 0; /* Não permite que a porcentagem encolha */
+}
+
+.progress-bar-container {
+  flex-grow: 1;
+  height: 8px;
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background-color: #00529e; /* Azul do Metrô */
+  border-radius: 4px;
+  transition: width 0.3s ease-in-out;
+}
+
+.list-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #aaa;
+  padding-right: 15px; /* Padding à direita para os ícones */
+}
+
+.list-item-actions .action-icon {
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+
+/* --- LISTA DE REGISTROS --- */
+.log-list-wrapper {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.log-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.log-list-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #222;
+}
+
+.recent-tag {
+  background-color: #eef0f2;
+  color: #555;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.log-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.log-list-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.log-list-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.log-drag-handle {
+  color: #c0c0c0;
+  cursor: grab;
+  font-size: 1.3rem;
+  margin-right: 5px;
+}
+
+.log-item-text {
+  flex-grow: 1;
+  color: #555;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  display: flex; /* Adicionado para alinhar os spans */
+  flex-wrap: wrap; /* Permite que o texto quebre linha se precisar */
+  align-items: center;
+  gap: 4px; /* Espaço entre os elementos do texto */
+}
+
+.log-user {
+  font-weight: 600; /* Nome do usuário em negrito */
+  color: #222;
+}
+
+.log-target {
+  font-weight: 600;
+  color: #00529e; /* Azul do Metrô para o item alvo */
+}
+
+.log-item-arrow {
+  color: #c0c0c0;
+  cursor: pointer;
+  font-size: 1.3rem;
+  margin-left: 10px;
+}
+
+
+/* --- Responsividade básica --- */
+@media (max-width: 1024px) {
+  .main-container {
+    flex-direction: column;
+  }
+
+  .main-left-column,
+  .main-right-column {
+    flex: none;
+    width: 100%;
+  }
+
+  .station-list-header, .station-list-item {
+    padding-left: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-container {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .video-placeholder {
+    height: 200px;
+  }
+
+  .controls-section {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-bar-wrapper {
+    width: 100%;
+  }
+
+  .add-button {
+    width: 100%;
+  }
+
+  .log-list-header h2 {
+    font-size: 1.2rem;
+  }
+
+  .recent-tag {
+    font-size: 0.8rem;
+    padding: 3px 8px;
+  }
+
+  .station-progress-area {
+    width: 100px; /* Reduz largura em mobile */
+  }
+}
+
+
+.tabela h1 {
+  color: #001789;
+  font-size: 26px;
+  font-family: 'Helvetica-Bold';
+  margin-bottom: 10px;
+}
+
+.tabela {
+  display: block; /* Alterando para block se necessário */
+  width: 50vw;
+  padding-bottom: 20px;
+}
+
+.contorno {
+  border-radius: 5px;
+  height: 50vh; /* Mantém a altura fixa */
+  overflow-y: auto; /* Adiciona a rolagem interna */
+}
+
+.linha-estacao {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}
+
+.tabela-passageiros {
+  width: 100%;
+  max-height: 50vh;
+  border-collapse: collapse;
+  margin-top: 20px;
+  color: #333;
+  overflow-y: auto;
+  display: table;
+}
+
+
+
+/*   
+  .tabela-passageiros th,
+  .tabela-passageiros td {
+    padding: 10px;
+    text-align: left;
+  } */
+
+.tabela-passageiros tr {
+  height: 50px; /* Define uma altura fixa para cada linha */
+  border-bottom: none;
+}
+
+
+.tabela-passageiros td {
+  padding: 10px;
+  text-align: left;
+  overflow: hidden; /* Impede o transbordamento */
+  white-space: nowrap; /* Impede quebra de linha */
+}
+
+.tabela-passageiros th {
+  padding: 10px;
+  text-align: left;
+  background-color: #ffffff; /* Cor de fundo cinza claro para o cabeçalho */
+  font-family: 'Helvetica-Bold';
+  color: #001789; /* Cor do texto cinza escuro no cabeçalho */
+  position: sticky;
+  top: 0; /* Fixa o cabeçalho no topo da tabela */
+  z-index: 1;
+}
+
+.tabela-passageiros tr:nth-child(odd) {
+  background-color: #ffffff; /* Fundo branco para linhas ímpares */
+}
+
+.tabela-passageiros tr:nth-child(even) {
+  background-color: #ececec; /* Fundo cinza claro para linhas pares */
+}
+
+.checkbox-circular {
+  width: 16px;
+  height: 16px;
+  border-radius: 20px;
+  border: 1px solid #ffffff;
+  cursor: pointer;
+  accent-color: #001789;
+}
+
+.contorno::-webkit-scrollbar {
+  width: 12px; /* Largura do scrollbar */
+}
+
+.contorno::-webkit-scrollbar-track {
+  background-color: #ffffff; /* Cor do fundo do track */
+  border-radius: 10px; /* Bordas arredondadas do track */
+}
+
+.contorno::-webkit-scrollbar-thumb {
+  background-color: #001789; /* Cor do thumb */
+  border-radius: 10px; /* Bordas arredondadas do thumb */
+}
+
+.contorno::-webkit-scrollbar-thumb:hover {
+  background-color: #001168; /* Cor do thumb ao passar o mouse */
+}
+
+.contorno::-webkit-scrollbar-button {
+  display: none; /* Esconde os botões do scrollbar (se houver) */
+}
+
+.filtros button {
+  font-size: 16px;
+  margin-right: 10px;
+  padding: 10px 40px;
+  cursor: pointer;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.filtros button:hover {
+  background-color: #e0e0e0;
+}
+
+.filtros .ativo {
+  background-color: #001789;
+  color: #fff;
+  border: #ffffff solid 0px;
+  outline: none;
+}
+
+.filtros .ativo:focus {
+  outline: none;
+}
+
+.filtros button:active {
+  outline: none;
+  border: #ccc solid 1px;
+}
+
+.filtros .ativo:hover {
+  background-color: #001477;
+}
+
+.ordenacao select {
+  padding-block: 10px;
+  padding-inline: 10px 100px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  color: #595959;
+  transition: border-color 0.3s ease;
+}
+
+.ordenacao select:focus {
+  border-color: #8b8b8b; /* Cor da borda ao focar */
+  outline: none; /* Remove o contorno padrão */
+}
+
+.ordenacao {
+  display: flex;
+  flex-direction: column;
+}
+
+.tiposfiltros {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 80vw;
+  margin-inline: auto;
+  margin-bottom: 40px;
+}
+
+.title {
+  display: flex;
+  justify-content: start;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.passageiros {
+  padding-left: 80px;
+}
+
+.title h2 {
+  font-family: 'Helvetica-Bold';
+  font-size: 15px;
+  color: #595959;
+}
+
+.barra-pesquisa {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 35px;
+}
+
+.input-container {
+  position: relative;
+  flex-grow: 1;
+  margin-right: 10px;
+}
+
+.input-container input {
+  width: 100%;
+  padding: 10px 15px 10px 40px; /* Adiciona espaço para o ícone */
+  border: 1px solid #ccc;
+  border-radius: 7px;
+  font-size: 16px;
+  color: #333;
+  background-color: #f9f9f9;
+  transition: border-color 0.3s ease;
+}
+
+.input-container input:focus {
+  border-color: #8b8b8b; /* Cor da borda ao focar */
+  outline: none; /* Remove o contorno padrão do navegador */
+}
+
+.input-container .icone-lupa {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  transform: translateY(-50%);
+  color: #888;
+  font-size: 16px;
+}
+
+.botao-cadastrar {
+  padding: 10px 20px;
+  background-color: #001789;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+
+.botao-cadastrar:hover {
+  background-color: #001166;
+}
+
+.botao-cadastrar:focus {
+  outline: none;
+}
+
+.title-icons {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* .icon:hover{
+    color: #001789;
+    cursor: pointer;
+  } */
+
+.icon {
+  font-size: 20px;
+  margin-inline: 5px;
+  transition: color 0.3s ease, opacity 0.3s ease;
+}
+
+.icon.desativado {
+  color: gray; /* Cor inativa */
+  cursor: not-allowed; /* Cursor inativo */
+}
+
+.icon.ativado {
+  color: #001789; /* Cor ativa */
+  cursor: pointer; /* Cursor clicável */
+}
+
+.sync {
+  transition: transform 0.3s ease;
+}
+
+.sync:active {
+  transform: rotate(360deg); /* Animação de rotação ao passar o mouse */
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 50vh; /* Ajuste conforme o tamanho da tabela */
+}
+
+.loading-gif {
+  width: 180px;
+  height: 50px;
+  object-fit: cover;
+}
+
+.loading-text {
+  font-size: 1.2rem;
+  color: #001789; /* Cor neutra */
+  text-align: center;
+  animation: fade 1.5s infinite; /* Exemplo de animação opcional */
+  font-family: 'Helvetica-Bold';
+}
+
+@keyframes fade {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.deletetitle p {
+  color: #333;
+  font-family: 'Helvetica-Bold';
+}
+
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.popup-container {
+  background: #fff;
+  padding-inline: 40px;
+  border-radius: 7px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  padding-block: 40px;
+}
+
+.popup-container h2 {
+  color: #001789;
+  font-size: 30px;
+  font-family: 'Helvetica-Bold';
+  margin-bottom: 15px;
+}
+
+.popup-buttons {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 35px;
+}
+
+.popup-buttons button {
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.popup-confirm {
+  background-color: #001789;
+  color: #ffffff;
+  border: 0px;
+  transition: background-color 0.3s ease;
+}
+
+.popup-confirm:hover {
+  background-color: #001166;
+}
+
+.popup-cancel {
+  background-color: #ffffff;
+  color: #353535;
+  border: #ccc 1px solid;
+  transition: background-color 0.3s ease;
+}
+
+.popup-cancel:hover {
+  background-color: #e0e0e0;
+}
+
+.cuidado {
+  background-color: #ffe9d9;
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  padding: 10px;
+  border-left: 5px solid #fa703f;
+}
+
+.cuidado p {
+  color: #bc4c2e;
+  font-size: 15px;
+  text-align: start;
+}
+
+.cuidado h3 {
+  color: #771505;
+}
+
+.deletetitle {
+  margin-bottom: 20px;
+}
+
+.nome-data {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+}
+
+.nome {
+  width: 400px;
+}
+
+.rg {
+  width: 100%;
+}
+
+.funcional {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Helvetica-Bold';
+  margin-top: 10px;
+}
+
+.funcionalinput {
+  display: flex;
+  justify-content: start;
+}
+
+.form-group {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px 0;
+}
+
+.loading-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.popup-buttons-cadastrar {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.botaocadastrar {
+  background-color: #001789;
+  border: 0px solid;
+  color: white;
+}
+
+.botaocadastrar:hover {
+  background-color: #001166;
+}
+
+.botaocancelar {
+  background-color: transparent;
+  border: 1px solid #ccc;
+  transition: background-color 0.3s ease;
+}
+
+.botaocancelar:hover {
+  background-color: #e0e0e0;
+}
+
+.botaocadastrar,
+.botaocancelar {
+  padding-block: 10px;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+.popup-container {
+  position: relative;
+  padding: 20px;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.fechar-popup {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 20px;
+  cursor: pointer;
+  color: #ccc;
+}
+
+.fechar-popup:hover {
+  color: #001789;
+}
+

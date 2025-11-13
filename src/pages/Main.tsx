@@ -1,48 +1,169 @@
-import metroLogoDark from "./../assets/metro-logo.png"; // Logo na cor escura
+import { ChevronRight, DragHandle } from "@mui/icons-material";
+import { Avatar } from "@mui/material";
+import { FaEllipsisV, FaSearch } from "react-icons/fa";
+import linha from "./../assets/linha.png";
+import black from "./../assets/black.png";
+import seta from "./../assets/seta.png";
 import "./Main.css"; // Ajuste o caminho conforme sua estrutura
+
+// --- MOCK DATA ---
+// Mock data para a lista de estações
+const stations = [
+  {
+    name: "Estação Consolação",
+    line: "Linha Verde",
+    lineColor: "#00A859", // Exemplo de cor para a Linha Verde
+    progress: 100,
+  },
+  {
+    name: "Estação Luz",
+    line: "Linha Azul",
+    lineColor: "#007FFF", // Exemplo de cor para a Linha Azul
+    progress: 100,
+  },
+  {
+    name: "Estação Pinheiros",
+    line: "Linha Amarela",
+    lineColor: "#FFD700", // Exemplo de cor para a Linha Amarela
+    progress: 100,
+  },
+  {
+    name: "Estação Pinheiros",
+    line: "Linha Vermelha",
+    lineColor: "#FF0000", // Exemplo de cor para a Linha Vermelha
+    progress: 25,
+  },
+];
+
+// Mock data para o log de atividades
+const logs = [
+  {
+    user: "Rodrigo",
+    avatarChar: "R", // Use a primeira letra para o Avatar
+    action: "adicionou uma nova foto em",
+    target: "Estação Consolação.",
+  },
+  {
+    user: "Mitchell",
+    avatarChar: "M",
+    action: "removeu uma nova foto em",
+    target: "Estação Consolação.",
+  },
+  {
+    user: "Taynah",
+    avatarChar: "T",
+    action: "adicionou uma nova foto em",
+    target: "Estação Consolação.",
+  },
+  {
+    user: "Henry",
+    avatarChar: "H",
+    action: "adicionou uma nova foto em",
+    target: "Estação Consolação.",
+  },
+  {
+    user: "Ramon",
+    avatarChar: "R",
+    action: "adicionou uma nova foto em",
+    target: "Estação Consolação.",
+  },
+];
 
 function MainPage() {
   return (
-    <div className="login-page-container">
-      {/* Lado Esquerdo: Formulário de Login */}
-      <div className="login-left">
-        <div className="login-header">
-          <img src={metroLogoDark} alt="Metrô Logo" className="login-logo" />
+    <div className="main-container">
+      {" "}
+      {/* Renomeei para main-container para evitar conflito com 'home' */}
+      {/* ----- COLUNA ESQUERDA ----- */}
+      <div className="main-left-column">
+        {/* Placeholder de Vídeo */}
+        <div className="video-placeholder"></div>
+
+        <div className="controls-section">
+          <div className="search-bar-wrapper">
+            {" "}
+            {/* Novo wrapper para a barra de pesquisa */}
+            <FaSearch />
+            <input type="text" placeholder="Pesquisar..." />
+          </div>
+          <button className="add-button">Adicionar</button>
         </div>
 
-        <div className="login-form-area">
-          <h1>BEM-VINDO!</h1>
-          <p className="login-subtitle">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam
-            ligula.
-          </p>
+        {/* Seção de Controles (Pesquisa e Adicionar) */}
+        <div className="tabela">
+          {/* Loading ou Tabela */}
+          <div className="contorno">
+            <table className="tabela-passageiros">
+              <thead>
+                <tr>
+                  <th>Estação</th>
+                  <th>Progresso</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <div className="linha-estacao">
+                      <img src={linha} alt="" />
+                      <div className="estacao">
+                        <h3>Estação Consolação</h3>
+                        <span>Linha Verde</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>progresso</td>
+                  <td>
+                    <FaEllipsisV />
+                  </td>
+                  <td>
+                    <img src={seta} alt="seta" />
+                    {/* <FaPen
+												style={{ cursor: 'pointer', color: '#888' }}
+												onClick={() => {
+												}}
+											/> */}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      {/* ----- COLUNA DIREITA ----- */}
+      <div className="main-right-column">
+        {/* Placeholder de Vídeo */}
+        <div className="video-placeholder"></div>
 
-          <form className="login-form">
-            <div className="input-group">
-              <input type="text" id="username" placeholder="Usuário" />
-              {/* <label htmlFor="username">Usuário</label> */}{" "}
-              {/* Exemplo de label flutuante se quiser */}
-            </div>
-
-            <div className="input-group">
-              <input type="password" id="password" placeholder="Senha" />
-              {/* <label htmlFor="password">Senha</label> */}{" "}
-              {/* Exemplo de label flutuante se quiser */}
-              {/* Ícone de olho para mostrar/esconder senha (opcional, requer JS) */}
-              <span className="password-toggle-icon">
-                {/* Você pode usar um SVG ou um ícone de biblioteca aqui */}
-                👁️ {/* Exemplo simples */}
-              </span>
-            </div>
-
-            <div className="forgot-password">
-              <a href="/forgot-password">Esqueceu sua senha?</a>
-            </div>
-
-            <button type="submit" className="login-button">
-              Entrar
-            </button>
-          </form>
+        {/* Lista de Registros */}
+        <div className="log-list-wrapper">
+          <div className="log-list-header">
+            <h2>Registros</h2>
+            <span className="recent-tag">Mais Recentes</span>
+          </div>
+          <ul className="log-list">
+            {logs.map((log, index) => (
+              <li key={index} className="log-list-item">
+                <img src={black} alt="" />
+                <Avatar
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    bgcolor: "#00529e", // Cor de fundo do Avatar
+                    fontSize: "1rem",
+                    fontWeight: 500,
+                  }}
+                >
+                  {log.avatarChar}
+                </Avatar>
+                <p className="log-item-text">
+                  <span className="log-user">{log.user}</span> {log.action}{" "}
+                  <strong className="log-target">{log.target}</strong>
+                </p>
+                <img src={seta} alt="" />
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </div>

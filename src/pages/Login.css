@@ -1,10 +1,16 @@
 /* Importe a fonte Poppins se ainda não fez no arquivo global */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
 /* Reset básico para a página de login */
 body {
   margin: 0;
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   box-sizing: border-box;
 }
 
@@ -20,13 +26,21 @@ body {
   flex: 1; /* Ocupa metade da largura */
   display: flex;
   flex-direction: column;
-  justify-content: flex-start; /* Alinha o conteúdo ao topo */
-  align-items: flex-start; /* Alinha o conteúdo à esquerda */
-  padding: 40px 80px; /* Preenchimento generoso */
+  justify-content: center; /* Alinha o conteúdo ao topo */
+  align-items: center; /* Alinha o conteúdo à esquerda */
+  padding-left: 40px;
+  padding-block: 80px;
   background-color: #ffffff;
+  width: 60%;
 }
 
 .login-header {
+  width: 80%;
+  margin-left: auto; /* Centraliza o bloco na área disponível */
+  display: flex;
+  justify-content: center;
+  align-items: center;  
+
   margin-bottom: 80px; /* Espaço abaixo do logo */
 }
 
@@ -36,30 +50,37 @@ body {
 }
 
 .login-form-area {
-  max-width: 400px; /* Limita a largura do formulário para melhor leitura */
-  width: 100%;
+  width: 80%;
   margin-left: auto; /* Centraliza o bloco na área disponível */
-  margin-right: auto;
+
+  margin-bottom: 60px;
 }
 
 .login-form-area h1 {
-  font-size: 2.5rem; /* Tamanho grande para BEM-VINDO! */
+  font-size: 64px; /* Tamanho grande para BEM-VINDO! */
   font-weight: 700;
-  color: #1a202c;
-  margin-bottom: 10px;
+  color: #000000;
+}
+
+.texts {
+  margin-bottom: 80px;
 }
 
 .login-subtitle {
-  font-size: 1rem;
-  color: #718096;
+  margin-left: auto; /* Centraliza o bloco na área disponível */
+  margin-right: auto;
+  width: 80%;
+  font-size: 16px;
+  color: #525252;
   margin-bottom: 40px; /* Espaço abaixo do subtítulo */
   line-height: 1.5;
 }
 
-.login-form {
+.textFields {
   display: flex;
   flex-direction: column;
-  gap: 20px; /* Espaço entre os campos */
+  gap: 20px;
+  margin-bottom: 15px;
 }
 
 .input-group {
@@ -100,28 +121,25 @@ body {
 }
 
 .forgot-password {
-  text-align: right; /* Alinha o link à direita */
-  margin-top: -10px; /* Ajuste para subir um pouco */
+  display: flex;
+  align-items: center;
 }
 
 .forgot-password a {
-  color: #00529e; /* Azul do Metrô */
-  text-decoration: none;
+  color: #5b5b5b; /* Azul do Metrô */
+  text-decoration: underline;
   font-size: 0.9rem;
   font-weight: 500;
-}
-
-.forgot-password a:hover {
-  text-decoration: underline;
+  text-align: center;
 }
 
 .login-button {
   width: 100%;
   padding: 14px 0;
-  background-color: #002a8d; /* Azul escuro do botão */
+  background-color: #001388; /* Azul escuro do botão */
   color: #ffffff;
   border: none;
-  border-radius: 8px;
+  border-radius: 7px;
   font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
@@ -135,24 +153,20 @@ body {
 
 /* --- Lado Direito: Ilustração e Descrição --- */
 .login-right {
-  flex: 1; /* Ocupa metade da largura */
+  flex: 2; /* Ocupa metade da largura */
   display: flex;
   justify-content: center;
   align-items: center;
   background-color: #f0f2f5; /* Fundo cinza claro */
-  padding: 40px; /* Preenchimento ao redor do card */
 }
 
 .illustration-card {
-  background-color: #ffffff;
   border-radius: 12px;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05); /* Sombra suave */
-  padding: 30px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   text-align: center;
-  max-width: 500px; /* Limita a largura do card */
   width: 100%;
 }
 
@@ -177,20 +191,74 @@ body {
 }
 
 .dot.active {
-  background-color: #002a8d; /* Azul escuro para o dot ativo */
+  background-color: #001388; /* Azul escuro para o dot ativo */
   width: 25px; /* Dot ativo mais largo */
   border-radius: 5px; /* Bordas levemente arredondadas para o ativo */
 }
 
 .illustration-description {
-  font-size: 0.95rem;
-  color: #718096;
+  font-size: 18px;
+  color: #525252;
   line-height: 1.6;
+  width: 50%;
 }
 
 .illustration-description .highlight {
-  color: #002a8d; /* Cor destacada para a parte "malesuada at" */
+
   font-weight: 600;
+}
+
+.lembrar-usuario {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.preferences {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin-bottom: 60px;
+}
+
+.checkbox-circular {
+  accent-color: #001388; /* Muda a cor de preenchimento para azul */
+}
+
+.input .MuiOutlinedInput-root:hover fieldset {
+  border-color: #919191;
+}
+
+.input .MuiOutlinedInput-root.Mui-focused fieldset {
+  border-color: #001789;
+}
+
+.input .MuiInputLabel-root.Mui-focused {
+  color: #001388;
+}
+
+
+.input {
+  border-color: #001388;
+}
+
+.MuiButton-root.entrar {
+  background-color: #001789;
+  color: white; /* Cor do texto */
+  font-family: "Helvetica-Bold";
+  border-radius: 20px;
+  margin: 0px;
+  width: 100%;
+}
+
+.email,
+.senha {
+  width: 100%;
+}
+
+.eye svg {
+  color: #8F8F8F; /* Define a cor do ícone */
 }
 
 /* Responsividade básica - para telas menores que 768px */
@@ -206,10 +274,6 @@ body {
     padding: 30px 20px; /* Menos padding em telas pequenas */
   }
 
-  .login-header {
-    margin-bottom: 40px;
-  }
-
   .login-form-area h1 {
     font-size: 2rem;
   }
@@ -220,11 +284,5 @@ body {
 
   .illustration-card {
     box-shadow: none; /* Remove a sombra em telas pequenas para economizar espaço */
-  }
-
-  .lembrar-usuario {
-    flex-direction: row;
-    align-items: flex-start;
-    gap: 10px;
   }
 }
