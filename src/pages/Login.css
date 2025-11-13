@@ -1,0 +1,230 @@
+/* Importe a fonte Poppins se ainda não fez no arquivo global */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+/* Reset básico para a página de login */
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  box-sizing: border-box;
+}
+
+/* Container principal da página */
+.login-page-container {
+  display: flex;
+  min-height: 100vh; /* Ocupa a altura total da viewport */
+  background-color: #f0f2f5; /* Cor de fundo suave para toda a página */
+}
+
+/* --- Lado Esquerdo: Formulário de Login --- */
+.login-left {
+  flex: 1; /* Ocupa metade da largura */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start; /* Alinha o conteúdo ao topo */
+  align-items: flex-start; /* Alinha o conteúdo à esquerda */
+  padding: 40px 80px; /* Preenchimento generoso */
+  background-color: #ffffff;
+}
+
+.login-header {
+  margin-bottom: 80px; /* Espaço abaixo do logo */
+}
+
+.login-logo {
+  height: 35px; /* Ajuste o tamanho do logo */
+  display: block;
+}
+
+.login-form-area {
+  max-width: 400px; /* Limita a largura do formulário para melhor leitura */
+  width: 100%;
+  margin-left: auto; /* Centraliza o bloco na área disponível */
+  margin-right: auto;
+}
+
+.login-form-area h1 {
+  font-size: 2.5rem; /* Tamanho grande para BEM-VINDO! */
+  font-weight: 700;
+  color: #1a202c;
+  margin-bottom: 10px;
+}
+
+.login-subtitle {
+  font-size: 1rem;
+  color: #718096;
+  margin-bottom: 40px; /* Espaço abaixo do subtítulo */
+  line-height: 1.5;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px; /* Espaço entre os campos */
+}
+
+.input-group {
+  position: relative;
+  width: 100%;
+}
+
+.input-group input {
+  width: calc(100% - 30px); /* 100% menos padding/borda */
+  padding: 12px 15px;
+  padding-right: 40px; /* Espaço para o ícone de senha */
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  color: #2d3748;
+  background-color: #fcfdfe;
+}
+
+/* Estilo para o placeholder */
+.input-group input::placeholder {
+  color: #a0aec0;
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: #3182ce; /* Borda azul ao focar */
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.2);
+}
+
+.password-toggle-icon {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #a0aec0;
+  font-size: 1.2rem; /* Tamanho do ícone */
+}
+
+.forgot-password {
+  text-align: right; /* Alinha o link à direita */
+  margin-top: -10px; /* Ajuste para subir um pouco */
+}
+
+.forgot-password a {
+  color: #00529e; /* Azul do Metrô */
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.forgot-password a:hover {
+  text-decoration: underline;
+}
+
+.login-button {
+  width: 100%;
+  padding: 14px 0;
+  background-color: #002a8d; /* Azul escuro do botão */
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-top: 20px; /* Espaço acima do botão */
+}
+
+.login-button:hover {
+  background-color: #001f6a;
+}
+
+/* --- Lado Direito: Ilustração e Descrição --- */
+.login-right {
+  flex: 1; /* Ocupa metade da largura */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f0f2f5; /* Fundo cinza claro */
+  padding: 40px; /* Preenchimento ao redor do card */
+}
+
+.illustration-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05); /* Sombra suave */
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 500px; /* Limita a largura do card */
+  width: 100%;
+}
+
+.illustration-image {
+  max-width: 100%;
+  height: auto;
+  margin-bottom: 25px;
+}
+
+.carousel-dots {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 25px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  background-color: #e2e8f0; /* Cinza claro para os dots inativos */
+  border-radius: 50%;
+  transition: background-color 0.3s ease;
+}
+
+.dot.active {
+  background-color: #002a8d; /* Azul escuro para o dot ativo */
+  width: 25px; /* Dot ativo mais largo */
+  border-radius: 5px; /* Bordas levemente arredondadas para o ativo */
+}
+
+.illustration-description {
+  font-size: 0.95rem;
+  color: #718096;
+  line-height: 1.6;
+}
+
+.illustration-description .highlight {
+  color: #002a8d; /* Cor destacada para a parte "malesuada at" */
+  font-weight: 600;
+}
+
+/* Responsividade básica - para telas menores que 768px */
+@media (max-width: 768px) {
+  .login-page-container {
+    flex-direction: column; /* Empilha os lados em telas pequenas */
+  }
+
+  .login-left,
+  .login-right {
+    flex: none; /* Desabilita o flex: 1 */
+    width: 100%;
+    padding: 30px 20px; /* Menos padding em telas pequenas */
+  }
+
+  .login-header {
+    margin-bottom: 40px;
+  }
+
+  .login-form-area h1 {
+    font-size: 2rem;
+  }
+
+  .login-right {
+    background-color: #ffffff; /* Ajuste o fundo do lado direito se desejar */
+  }
+
+  .illustration-card {
+    box-shadow: none; /* Remove a sombra em telas pequenas para economizar espaço */
+  }
+
+  .lembrar-usuario {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 10px;
+  }
+}
