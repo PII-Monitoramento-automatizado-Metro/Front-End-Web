@@ -33,6 +33,30 @@ const stations = [
     lineColor: "#FF0000", // Exemplo de cor para a Linha Vermelha
     progress: 25,
   },
+  {
+    name: "Estação Pinheiros",
+    line: "Linha Vermelha",
+    lineColor: "#FF0000", // Exemplo de cor para a Linha Vermelha
+    progress: 25,
+  },
+  {
+    name: "Estação Pinheiros",
+    line: "Linha Vermelha",
+    lineColor: "#FF0000", // Exemplo de cor para a Linha Vermelha
+    progress: 25,
+  },
+  {
+    name: "Estação Pinheiros",
+    line: "Linha Vermelha",
+    lineColor: "#FF0000", // Exemplo de cor para a Linha Vermelha
+    progress: 25,
+  },
+  {
+    name: "Estação Pinheiros",
+    line: "Linha Vermelha",
+    lineColor: "#FF0000", // Exemplo de cor para a Linha Vermelha
+    progress: 25,
+  },
 ];
 
 // Mock data para o log de atividades
@@ -78,55 +102,80 @@ function MainPage() {
       <div className="main-left-column">
         {/* Placeholder de Vídeo */}
         <div className="video-placeholder"></div>
+        <div className="controlsTabela-Scroll">
+          <div className="Scroll"></div>
+          <div className="controls-tabela">
+            <div className="controls-section">
+              <div className="search-bar-wrapper">
+                {" "}
+                {/* Novo wrapper para a barra de pesquisa */}
+                <FaSearch className="search-icon" />
+                <input type="text" placeholder="Pesquisar..." />
+              </div>
+              <button className="add-button">Adicionar</button>
+            </div>
 
-        <div className="controls-section">
-          <div className="search-bar-wrapper">
-            {" "}
-            {/* Novo wrapper para a barra de pesquisa */}
-            <FaSearch />
-            <input type="text" placeholder="Pesquisar..." />
-          </div>
-          <button className="add-button">Adicionar</button>
-        </div>
+            {/* Seção de Controles (Pesquisa e Adicionar) */}
+            <div className="tabela">
+              {/* Loading ou Tabela */}
+              <div className="contorno">
+                <div className="conteudo-ltr">
+                  <table className="tabela-passageiros">
+                    <thead>
+                      <tr>
+                        <th>Estação</th>
+                        <th>Progresso</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {/* 1. O .map() cria o <tr> principal. Não adicione outro <tr>! */}
+                      {stations.map((station, index) => (
+                        <tr key={index}>
+                          {/* CÉLULA 1: ESTAÇÃO */}
+                          <div className="linha-estacao">
+                            <img src={linha} alt="" />
 
-        {/* Seção de Controles (Pesquisa e Adicionar) */}
-        <div className="tabela">
-          {/* Loading ou Tabela */}
-          <div className="contorno">
-            <table className="tabela-passageiros">
-              <thead>
-                <tr>
-                  <th>Estação</th>
-                  <th>Progresso</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>
-                    <div className="linha-estacao">
-                      <img src={linha} alt="" />
-                      <div className="estacao">
-                        <h3>Estação Consolação</h3>
-                        <span>Linha Verde</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td>progresso</td>
-                  <td>
-                    <FaEllipsisV />
-                  </td>
-                  <td>
-                    <img src={seta} alt="seta" />
-                    {/* <FaPen
+                            <div className="estacao">
+                              <h3>Estação Consolação</h3>
+
+                              <span>Linha Verde</span>
+                            </div>
+                          </div>
+
+                          {/* CÉLULA 2: PROGRESSO */}
+                          <td>
+                            <div className="progress-wrapper">
+                              <span className="progress-text">
+                                {station.progress}%
+                              </span>
+                              <div className="progress-bar-container">
+                                <div
+                                  className="progress-bar-fill"
+                                  style={{ width: `${station.progress}%`}}
+                                ></div>
+                              </div>
+                            </div>
+                          </td>
+
+                          <td>
+                            <FaEllipsisV />
+                          </td>
+                          <td>
+                            <img src={seta} alt="seta" />
+                            {/* <FaPen
 												style={{ cursor: 'pointer', color: '#888' }}
 												onClick={() => {
 												}}
 											/> */}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -144,7 +193,7 @@ function MainPage() {
           <ul className="log-list">
             {logs.map((log, index) => (
               <li key={index} className="log-list-item">
-                <img src={black} alt="" />
+                <img src={black} alt="" className="bars"/>
                 <Avatar
                   sx={{
                     width: 40,

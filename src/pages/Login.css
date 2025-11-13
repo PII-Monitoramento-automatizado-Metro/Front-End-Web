@@ -157,7 +157,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #f0f2f5; /* Fundo cinza claro */
+  background-color: #ffffff; /* Fundo cinza claro */
 }
 
 .illustration-card {
@@ -185,7 +185,7 @@ body {
 .dot {
   width: 8px;
   height: 8px;
-  background-color: #e2e8f0; /* Cinza claro para os dots inativos */
+  background-color: #b1b1b1; /* Cinza claro para os dots inativos */
   border-radius: 50%;
   transition: background-color 0.3s ease;
 }
