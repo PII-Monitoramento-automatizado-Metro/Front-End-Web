@@ -4,7 +4,10 @@ import { FaEllipsisV, FaSearch } from "react-icons/fa";
 import linha from "./../assets/linha.png";
 import black from "./../assets/black.png";
 import seta from "./../assets/seta.png";
+import PieGraphic from "../components/PieGraphic";
 import "./Main.css"; // Ajuste o caminho conforme sua estrutura
+import AreaGraphic from "../components/AreaGraphic";
+
 
 // --- MOCK DATA ---
 // Mock data para a lista de estações
@@ -101,7 +104,7 @@ function MainPage() {
       {/* ----- COLUNA ESQUERDA ----- */}
       <div className="main-left-column">
         {/* Placeholder de Vídeo */}
-        <div className="video-placeholder"></div>
+        <PieGraphic />
         <div className="controlsTabela-Scroll">
           <div className="Scroll"></div>
           <div className="controls-tabela">
@@ -152,7 +155,7 @@ function MainPage() {
                               <div className="progress-bar-container">
                                 <div
                                   className="progress-bar-fill"
-                                  style={{ width: `${station.progress}%`}}
+                                  style={{ width: `${station.progress}%` }}
                                 ></div>
                               </div>
                             </div>
@@ -182,7 +185,7 @@ function MainPage() {
       {/* ----- COLUNA DIREITA ----- */}
       <div className="main-right-column">
         {/* Placeholder de Vídeo */}
-        <div className="video-placeholder"></div>
+        <AreaGraphic />
 
         {/* Lista de Registros */}
         <div className="log-list-wrapper">
@@ -193,7 +196,7 @@ function MainPage() {
           <ul className="log-list">
             {logs.map((log, index) => (
               <li key={index} className="log-list-item">
-                <img src={black} alt="" className="bars"/>
+                <img src={black} alt="" className="bars" />
                 <Avatar
                   sx={{
                     width: 40,

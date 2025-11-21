@@ -1,0 +1,292 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
+
+.summary-container-custom {
+  background-color: white;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  min-height: 300px; /* Altura mínima do card */
+  width: 100%;
+}
+
+.summary-header {
+  width: 100%;
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.summary-header h3 {
+  margin: 0;
+  font-size: 40px;
+  font-weight: 600;
+  color: #000000;
+}
+
+/* Wrapper que segura o Gráfico (Esq) e a Legenda (Dir) */
+.chart-content-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 100%;
+}
+
+/* Área do Gráfico - ISSO É O QUE FAZ O GRÁFICO APARECER */
+.chart-wrapper {
+  width: 50%;
+  height: 220px; /* <--- IMPORTANTE: Sem essa altura fixa, o gráfico some! */
+  position: relative;
+}
+
+/* Área da Legenda/Detalhes */
+.chart-details {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  
+  /* --- NOVO: Scroll --- */
+  max-height: 250px; /* Altura máxima igual à altura do gráfico */
+  overflow-y: auto;  /* Ativa o scroll vertical se passar da altura */
+  padding-right: 5px; /* Espaço para não colar o texto no scrollbar */
+}
+
+/* Estilização bonita do Scrollbar da legenda */
+.chart-details::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chart-details::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.chart-details::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+.chart-details::-webkit-scrollbar-thumb:hover {
+  background: #001388; /* Cor azul ao passar o mouse no scroll */
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 8px;
+
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.legend-item.active {
+  background-color: #f4f7fb;
+  border-color: #e0e0e0;
+  transform: translateX(5px);
+}
+
+.sector-transition {
+  transform-origin: center center;
+  transform-box: view-box;
+  /* A transição suave é essencial aqui */
+  transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), filter 0.3s ease;
+  transform: scale(1);
+  filter: none;
+  cursor: pointer;
+}
+
+.sector-transition.active {
+  transform: scale(1.08); /* O crescimento visual */
+  filter: url(#shadow);
+  z-index: 10;
+}
+
+.legend-color {
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.legend-info {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.legend-name-value {
+  display: flex;
+  flex-direction: column;
+}
+
+.legend-name {
+  font-size: 20px;
+  color: #000000;
+  font-weight: 600;
+}
+
+.legend-value {
+  font-size: 15px;
+  color: #888;
+}
+
+.pie-grow-animation {
+  transform-origin: center center; /* Garante que cresça a partir do meio */
+  transform-box: view-box; /* Usa o sistema de coordenadas do SVG */
+
+  /* Animação elástica suave */
+  animation: expand-bounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes expand-bounce {
+  /* Começa com escala 0.91 (que é aprox. 80px / 88px) - o tamanho "normal" */
+  0% {
+    transform: scale(0.909);
+  }
+  /* Termina na escala 1 (tamanho total expandido) */
+  100% {
+    transform: scale(1);
+  }
+}
+
+.sector-animada {
+  /* Define o ponto de origem da animação bem no centro do gráfico */
+  transform-origin: center center;
+  transform-box: view-box;
+
+  /* A animação em si: 0.3s de duração com uma curva suave (ease-out) */
+  animation: crescer-suave 0.3s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+
+  /* Mantém o filtro de sombra que criamos antes para dar destaque */
+  filter: url(#shadow);
+  cursor: pointer;
+}
+
+@keyframes crescer-suave {
+  from {
+    /* Começa com escala 0.92 (aparentando ser o tamanho normal) */
+    transform: scale(0.92);
+  }
+  to {
+    /* Termina na escala 1 (o tamanho expandido definido no React) */
+    transform: scale(1);
+  }
+}
+
+.graphic-tag {
+  font-size: 0.8rem;
+  background-color: #ffffff;
+  color: #7f7f7f;
+  padding: 5px 30px;
+  border-radius: 24px;
+  border: #c2c2c2 1px solid;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* --- PieGraphic.css --- */
+
+/* ... mantenha o .sector-transition e outros estilos ... */
+
+/* Container das Abas */
+.tabs-container {
+  display: flex;
+  justify-content: space-around; /* Espalha as abas igualmente */
+  border-bottom: 1px solid #ffffff; /* Linha cinza fina embaixo de tudo */
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+/* Botão da Aba (Estilo padrão) */
+.tab-button {
+  background: none;
+  border: none;
+  padding: 15px 20px; /* Espaçamento interno */
+  cursor: pointer;
+  font-family: "Poppins", sans-serif;
+  font-size: 18px;
+  color: #888; /* Cor cinza para inativo */
+  position: relative; /* Necessário para posicionar a linha azul */
+  transition: color 0.3s ease;
+
+  flex: 1;
+}
+
+.tab-button:hover {
+  color: #555;
+}
+
+/* Botão da Aba (QUANDO ATIVO) */
+.tab-button.active {
+  color: #001388; /* Azul do seu tema */
+  font-weight: 600; /* Negrito */
+}
+
+/* A linha azul embaixo da aba ativa */
+.tab-button.active::after {
+  content: "";
+  position: absolute;
+  bottom: -1px; /* Coloca em cima da borda cinza do container */
+  left: 0;
+  width: 100%;
+  height: 3px; /* Grossura da linha azul */
+  background-color: #001388;
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+}
+
+.recharts-wrapper *:focus {
+  outline: none !important;
+}
+
+/* Reforço específico para a fatia */
+.sector-transition:focus {
+  outline: none !important;
+}
+
+.legend-info {
+  display: flex;
+  flex-grow: 1;
+  align-items: center;
+  justify-content: space-between; /* Joga a porcentagem pra direita no Geral */
+}
+
+/* Helper para agrupar nome e valor no Geral */
+.legend-name-value {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Estilo da porcentagem na direita (Geral) */
+.legend-percent-right {
+  margin-left: 5px;
+  color: #888;
+  font-weight: normal;
+  font-size: 12px;
+}
+
+/* --- NOVO: Layout Vertical para Estações --- */
+.legend-info-vertical {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start; /* Alinha tudo à esquerda */
+  flex-grow: 1;
+}
+
+/* Estilo do texto "Progresso: 80%" */
+.legend-subtext {
+  font-size: 12px;
+  color: #666;
+  margin-top: 2px;
+}
+
+.legend-subtext strong {
+  color: #333; /* Destaque no número */
+  font-weight: 600;
+}
