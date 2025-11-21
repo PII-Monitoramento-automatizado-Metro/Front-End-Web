@@ -1,13 +1,11 @@
-import { ChevronRight, DragHandle } from "@mui/icons-material";
 import { Avatar } from "@mui/material";
 import { FaEllipsisV, FaSearch } from "react-icons/fa";
-import linha from "./../assets/linha.png";
-import black from "./../assets/black.png";
-import seta from "./../assets/seta.png";
-import PieGraphic from "../components/PieGraphic";
-import "./Main.css"; // Ajuste o caminho conforme sua estrutura
 import AreaGraphic from "../components/AreaGraphic";
-
+import PieGraphic from "../components/PieGraphic";
+import black from "./../assets/black.png";
+import linha from "./../assets/linha.png";
+import seta from "./../assets/seta.png";
+import "./Main.css"; // Ajuste o caminho conforme sua estrutura
 
 // --- MOCK DATA ---
 // Mock data para a lista de estações
