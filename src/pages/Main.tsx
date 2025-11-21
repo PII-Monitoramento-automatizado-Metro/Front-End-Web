@@ -201,7 +201,7 @@ function MainPage() {
                   sx={{
                     width: 40,
                     height: 40,
-                    bgcolor: "#00529e", // Cor de fundo do Avatar
+                    bgcolor: "#001388", // Cor de fundo do Avatar
                     fontSize: "1rem",
                     fontWeight: 500,
                   }}
