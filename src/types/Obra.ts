@@ -1,14 +1,22 @@
 // Este arquivo define o "formato" dos dados para o TypeScript
 
 // 1. O formato de uma Obra (igual ao que o Backend espera/envia)
+export interface RegistroType {
+  id: string;
+  data: string;
+  fotos: string[]; // <-- AGORA É UM ARRAY DE STRINGS
+}
+
 export interface ObraType {
-  id?: string; // O ID é opcional na criação, mas vem na listagem
+  id: string;
   nome: string;
   linha: string;
   progresso_atual: number;
-  data_inicio: string; // Datas como string (ex: "2024-01-01")
+  data_inicio: string;
   data_final: string;
-  fotos: string[]; // Lista de URLs de fotos
+  // Agora temos uma lista de registros em vez de fotos soltas
+  registros?: RegistroType[];
+  fotos?: string[]; // Mantemos por compatibilidade antiga, se quiser
 }
 
 // 2. O formato da resposta quando criamos uma obra

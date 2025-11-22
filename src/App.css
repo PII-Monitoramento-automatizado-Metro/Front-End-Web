@@ -40,3 +40,7 @@
   color: #888;
 }
  */
+
+.main-content {
+  padding-top: 80px; /* Espaço para o Navbar fixo */
+}

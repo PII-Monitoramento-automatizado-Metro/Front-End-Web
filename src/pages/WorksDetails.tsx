@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom"; // 1. Import useNavigate
+import { useParams, useNavigate } from "react-router-dom";
 import {
   FaTimes,
   FaRegImage,
@@ -9,7 +9,7 @@ import {
   FaChevronLeft,
   FaChevronRight,
   FaLayerGroup,
-  FaArrowLeft, // 2. Import o ícone da seta
+  FaArrowLeft,
 } from "react-icons/fa";
 import {
   getObraByIdRequest,
@@ -25,7 +25,6 @@ const BASE_URL = "http://127.0.0.1:8000/";
 
 function WorksDetails() {
   const { id } = useParams();
-  const navigate = useNavigate(); // 3. Inicializa o hook de navegação
   const [obra, setObra] = useState<ObraType | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -44,6 +43,7 @@ function WorksDetails() {
   const [openModal, setOpenModal] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [registroDate, setRegistroDate] = useState("");
+  const navigate = useNavigate();
 
   // Upload Múltiplo
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -53,14 +53,8 @@ function WorksDetails() {
   const getFullUrl = (path: string) => (BASE_URL + path).replace(/\\/g, "/");
 
   const carregarDetalhes = async () => {
-    // 1. Proteção: Se não tiver ID na URL, para o loading e sai
-    if (!id) {
-      setLoading(false);
-      return;
-    }
-
+    if (!id) return;
     try {
-      setLoading(true); // Garante que o loading apareça ao recarregar
       const dados = await getObraByIdRequest(id);
       setObra(dados);
 
@@ -72,10 +66,8 @@ function WorksDetails() {
         setCurrentRegistro(null);
       }
     } catch (error) {
-      console.error("Erro ao carregar:", error);
-      // Opcional: setObra(null) para mostrar "Obra não encontrada"
+      console.error(error);
     } finally {
-      // 2. OBRIGATÓRIO: Desliga o loading aconteça o que acontecer
       setLoading(false);
     }
   };
@@ -187,7 +179,6 @@ function WorksDetails() {
 
   return (
     <div className="details-container">
-      {/* 4. Header Atualizado com Seta de Voltar */}
       <div className="details-header">
         <button
           onClick={() => navigate("/main")}
@@ -195,17 +186,15 @@ function WorksDetails() {
             background: "transparent",
             border: "none",
             cursor: "pointer",
+            fontSize: "1.5rem",
+            color: "#333",
             display: "flex",
             alignItems: "center",
-            color: "#333",
-            fontSize: "1.2rem",
-            marginRight: "10px",
           }}
           title="Voltar para lista"
         >
           <FaArrowLeft />
         </button>
-
         <h1>{obra.nome}</h1>
         <span className="tag-obra">Obra</span>
       </div>
@@ -289,7 +278,6 @@ function WorksDetails() {
               const capaUrl =
                 reg.fotos.length > 0 ? getFullUrl(reg.fotos[0]) : "";
               const isSelected = currentRegistro?.id === reg.id;
-
               return (
                 <div key={reg.id} style={{ position: "relative" }}>
                   <img
@@ -297,7 +285,7 @@ function WorksDetails() {
                     alt={`Registro ${reg.data}`}
                     className={`thumb-item ${isSelected ? "active" : ""}`}
                     onClick={() => selecionarRegistro(reg)}
-                    title={`Data: ${reg.data} (${reg.fotos.length} fotos)`}
+                    title={`Data: ${reg.data}`}
                   />
                   {reg.fotos.length > 1 && (
                     <div
@@ -438,7 +426,7 @@ function WorksDetails() {
         </div>
       )}
 
-      {/* LIGHTBOX ZOOM */}
+      {/* LIGHTBOX ZOOM (REGISTROS) */}
       {zoomImage && (
         <div className="lightbox-overlay" onClick={() => setZoomImage(null)}>
           <FaTimes
@@ -454,7 +442,7 @@ function WorksDetails() {
         </div>
       )}
 
-      {/* LIGHTBOX DO MODELO BIM */}
+      {/* --- NOVO: LIGHTBOX DO MODELO BIM (Estava faltando) --- */}
       {bimModalOpen && temFotosBim && (
         <div
           className="lightbox-overlay"

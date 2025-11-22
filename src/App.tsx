@@ -6,6 +6,7 @@ import ChangeLog from "./pages/ChangeLog";
 import Config from "./pages/Config";
 import { Route, Routes, useLocation } from "react-router-dom";
 import Main from "./pages/Main";
+import WorksDetails from "./pages/WorksDetails";
 
 
 
@@ -22,6 +23,7 @@ function App() {
           <Route path="/main" element={<Main />} />{" "}
           <Route path="/changeLog" element={<ChangeLog />} />
           <Route path="/config" element={<Config />} />
+          <Route path="/obra/:id" element={<WorksDetails />} />
         </Routes>
       </div>
     </div>

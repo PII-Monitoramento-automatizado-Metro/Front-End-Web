@@ -1,43 +1,69 @@
 import React, { useState, useEffect } from "react";
 import metroLogo from "../assets/metro-logo.png";
-import userAvatar from "../assets/user-avatar.png"; // O avatar azul com o símbolo do metrô
-import { Link } from "react-router-dom";
+import userAvatar from "../assets/user-avatar.png";
+import { Link, useNavigate } from "react-router-dom";
 import "./Navbar.css";
-import { useNavigate } from "react-router-dom";
+
+// IMPORTANTE: Importe a função que busca os dados do usuário
+// Ajuste o caminho "../requests/..." se necessário
+import { getUserDataRequest } from "../services/httpsRequests";
 
 function Navbar() {
   const navigate = useNavigate();
-  // --- 1. ESTADO PARA GUARDAR O NOME ---
   const [nomeUsuario, setNomeUsuario] = useState("Visitante");
 
-  // --- 2. EFEITO QUE RODA AO CARREGAR A TELA ---
+  // --- EFEITO: CARREGA O NOME AO INICIAR ---
   useEffect(() => {
-    // Busca o nome que salvamos na tela de Login
-    const nomeSalvo = localStorage.getItem("nome_usuario");
+    const carregarUsuario = async () => {
+      // 1. Tenta pegar o nome direto do localStorage (mais rápido)
+      const nomeSalvo = localStorage.getItem("nome_usuario");
 
-    if (nomeSalvo) {
-      setNomeUsuario(nomeSalvo);
-    }
+      // 2. Tenta pegar o funcional salvo no Login
+      const funcionalSalvo = localStorage.getItem("user_funcional");
+
+      if (nomeSalvo) {
+        // Se já tem o nome salvo, usa ele
+        setNomeUsuario(nomeSalvo);
+      } else if (funcionalSalvo) {
+        // Se NÃO tem nome, mas tem o funcional, busca no Banco de Dados
+        try {
+          const dados = await getUserDataRequest(funcionalSalvo);
+          setNomeUsuario(dados.nome);
+          // Opcional: Salva o nome para não precisar buscar de novo no próximo refresh
+          localStorage.setItem("nome_usuario", dados.nome);
+        } catch (error) {
+          console.error("Não foi possível carregar o nome do usuário.");
+        }
+      }
+    };
+
+    carregarUsuario();
   }, []);
 
   const handleLogout = () => {
     try {
-      console.log("Login bem-sucedido:");
+      // Limpa os dados ao sair
+      localStorage.removeItem("nome_usuario");
+      localStorage.removeItem("user_funcional");
+
+      console.log("Logout realizado.");
       navigate("/");
     } catch (error) {
-      alert("Ocorreu um erro ao fazer login. Tente novamente.");
+      alert("Ocorreu um erro ao sair.");
       console.error(error);
     }
   };
 
   return (
     <nav className="navbar-container">
-      {/* Lado Esquerdo: Logo e Links */}
+      {/* Lado Esquerdo */}
       <div className="navbar-left">
         <a href="/" className="navbar-logo-link">
           <img src={metroLogo} alt="Metrô Logo" className="navbar-logo" />
         </a>
       </div>
+
+      {/* Links Centrais */}
       <ul className="navbar-links">
         <li>
           <Link to="/main" className="active">
@@ -52,17 +78,18 @@ function Navbar() {
         </li>
       </ul>
 
-      {/* Lado Direito: Perfil do Usuário e Botão de Logout */}
+      {/* Lado Direito: Perfil */}
       <div className="navbar-right">
         <div className="user-profile">
           <div className="user-avatar-info">
             <img src={userAvatar} alt="Avatar" className="user-avatar" />
             <div className="user-info">
               <span>Olá!</span>
+              {/* AQUI O NOME SERÁ EXIBIDO DINAMICAMENTE */}
               <strong>{nomeUsuario}</strong>
             </div>
           </div>
-          {/* Ícone de seta para baixo (dropdown) */}
+
           <svg
             width="12"
             height="12"
@@ -79,6 +106,7 @@ function Navbar() {
             />
           </svg>
         </div>
+
         <button type="submit" className="logout-button" onClick={handleLogout}>
           Log Out
         </button>

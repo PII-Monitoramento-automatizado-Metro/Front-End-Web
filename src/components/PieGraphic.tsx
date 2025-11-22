@@ -1,8 +1,18 @@
-import { useCallback, useState } from "react";
+import { useState, useEffect } from "react";
 import { Cell, Pie, PieChart, ResponsiveContainer, Sector } from "recharts";
+import { listObrasRequest } from "../services/httpsRequests"; // Importe sua requisição
+import type { ObraType } from "../types/Obra"; // Importe a tipagem
 import "./PieGraphic.css";
 
-// --- 1. GERADOR DE CORES ALEATÓRIAS ---
+// --- TIPAGEM DO DADO DO GRÁFICO ---
+type ChartDataPoint = {
+  name: string;
+  value: number;
+  fill: string;
+  statusPercent?: number;
+};
+
+// --- GERADOR DE CORES ALEATÓRIAS ---
 const getRandomColor = () => {
   const letters = "0123456789ABCDEF";
   let color = "#";
@@ -12,51 +22,7 @@ const getRandomColor = () => {
   return color;
 };
 
-// --- BANCO DE DADOS FAKE DE ESTAÇÕES ---
-const stationNames = [
-  "Estação Luz",
-  "Estação Consolação",
-  "Estação Pinheiros",
-  "Estação Sé",
-  "Estação Paraíso",
-  "Estação Trianon-Masp",
-  "Estação Vila Madalena",
-  "Estação Barra Funda",
-  "Estação Tatuapé",
-  "Estação Brás",
-];
-
-// --- FUNÇÃO QUE GERA DADOS ---
-const generateDataForTab = (tab: string) => {
-  // ABA GERAL (Resumo Macro)
-  if (tab === "Geral") {
-    return [
-      { name: "Concluídas", value: 7, fill: "#001388" },
-      { name: "Em progresso", value: 4, fill: "#9EA8E2" },
-      { name: "Atrasadas", value: 3, fill: "#D6DCFF" },
-    ];
-  }
-
-  // ABAS ESPECÍFICAS (Estações)
-  const numberOfStations = Math.floor(Math.random() * 4) + 4; // Gera entre 4 e 8 estações
-  const newChartData = [];
-
-  for (let i = 0; i < numberOfStations; i++) {
-    const randomName =
-      stationNames[Math.floor(Math.random() * stationNames.length)];
-    newChartData.push({
-      name: randomName,
-      value: Math.floor(Math.random() * 50) + 10, // Tamanho da fatia (Peso da obra)
-      fill: getRandomColor(),
-      // Geramos uma porcentagem específica para o status desta estação
-      statusPercent: Math.floor(Math.random() * 90) + 5,
-    });
-  }
-  return newChartData;
-};
-
-// REMOVIDO "Concluídas" DA LISTA
-const tabs = ["Geral", "Em progresso", "Atrasadas"];
+const tabs = ["Geral", "Em progresso", "Atrasadas", "Concluídas"];
 
 // --- RENDERIZAÇÃO VISUAL ---
 const renderActiveShape = (props: any) => {
@@ -115,10 +81,12 @@ const renderActiveShape = (props: any) => {
 };
 
 export default function PieGraphic() {
-  const [chartData, setChartData] = useState(generateDataForTab("Geral"));
+  const [obras, setObras] = useState<ObraType[]>([]);
+  const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
+  const [activeTab, setActiveTab] = useState("Geral");
+
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const [lockedIndex, setLockedIndex] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState("Geral");
 
   const activeIndex =
     lockedIndex !== null
@@ -128,11 +96,86 @@ export default function PieGraphic() {
       : undefined;
   const total = chartData.reduce((sum, item) => sum + item.value, 0);
 
+  // 1. Buscar dados do banco
+  useEffect(() => {
+    const fetchObras = async () => {
+      try {
+        const dados = await listObrasRequest();
+        setObras(dados);
+      } catch (error) {
+        console.error("Erro ao buscar obras para o gráfico:", error);
+      }
+    };
+    fetchObras();
+  }, []);
+
+  // 2. Processar dados
+  useEffect(() => {
+    if (obras.length === 0) return;
+
+    const hoje = new Date();
+
+    const parseData = (dataStr: string) => {
+      if (!dataStr) return new Date(8640000000000000);
+      if (dataStr.includes("/")) {
+        const parts = dataStr.split("/");
+        return new Date(
+          Number(parts[2]),
+          Number(parts[1]) - 1,
+          Number(parts[0])
+        );
+      }
+      return new Date(dataStr);
+    };
+
+    const concluidas = obras.filter((o) => o.progresso_atual >= 100);
+    const atrasadas = obras.filter((o) => {
+      const dataPrazo = parseData(o.data_final);
+      return o.progresso_atual < 100 && dataPrazo < hoje;
+    });
+    const emProgresso = obras.filter((o) => {
+      const dataPrazo = parseData(o.data_final);
+      return o.progresso_atual < 100 && dataPrazo >= hoje;
+    });
+
+    let dataTemp: ChartDataPoint[] = [];
+
+    if (activeTab === "Geral") {
+      dataTemp = [
+        { name: "Concluídas", value: concluidas.length, fill: "#001388" },
+        { name: "Em progresso", value: emProgresso.length, fill: "#9EA8E2" },
+        { name: "Atrasadas", value: atrasadas.length, fill: "#D6DCFF" },
+      ];
+      dataTemp = dataTemp.filter((d) => d.value > 0);
+    } else if (activeTab === "Em progresso") {
+      dataTemp = emProgresso.map((o) => ({
+        name: o.nome,
+        value: 1,
+        fill: getRandomColor(),
+        statusPercent: o.progresso_atual,
+      }));
+    } else if (activeTab === "Atrasadas") {
+      dataTemp = atrasadas.map((o) => ({
+        name: o.nome,
+        value: 1,
+        fill: getRandomColor(),
+        statusPercent: o.progresso_atual,
+      }));
+    } else if (activeTab === "Concluídas") {
+      dataTemp = concluidas.map((o) => ({
+        name: o.nome,
+        value: 1,
+        fill: "#001388",
+        statusPercent: 100,
+      }));
+    }
+
+    setChartData(dataTemp);
+    setLockedIndex(null);
+  }, [activeTab, obras]);
+
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
-    setChartData(generateDataForTab(tab));
-    setLockedIndex(null);
-    setHoverIndex(null);
   };
 
   return (
@@ -158,109 +201,96 @@ export default function PieGraphic() {
       </div>
 
       <div className="chart-content-wrapper">
-        {/* GRÁFICO */}
         <div
           className="chart-wrapper"
           style={{ width: "50%", height: 300, position: "relative" }}
         >
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <defs>
-                <filter
-                  id="shadow"
-                  x="-50%"
-                  y="-50%"
-                  width="200%"
-                  height="200%"
-                >
-                  <feDropShadow
-                    dx="0"
-                    dy="4"
-                    stdDeviation="6"
-                    floodColor="#000000"
-                    floodOpacity="0.3"
-                  />
-                </filter>
-              </defs>
+          {chartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <defs>
+                  <filter
+                    id="shadow"
+                    x="-50%"
+                    y="-50%"
+                    width="200%"
+                    height="200%"
+                  >
+                    <feDropShadow
+                      dx="0"
+                      dy="4"
+                      stdDeviation="6"
+                      floodColor="#000000"
+                      floodOpacity="0.3"
+                    />
+                  </filter>
+                </defs>
 
-              <Pie
-                // @ts-expect-error: Recharts typing
-                activeIndex={activeIndex}
-                activeShape={renderActiveShape}
-                data={chartData}
-                cx="50%"
-                cy="50%"
-                innerRadius={85}
-                outerRadius={125}
-                dataKey="value"
-                paddingAngle={2}
-                stroke="none"
-                animationDuration={500}
-                animationBegin={0}
-                onMouseEnter={(_, index) => setHoverIndex(index)}
-                onMouseLeave={() => setHoverIndex(null)}
-                onClick={(_, index, e) => {
-                  e.stopPropagation();
-                  setLockedIndex((prev) => (prev === index ? null : index));
-                }}
-              >
-                {chartData.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={entry.fill}
-                    style={{ outline: "none", transition: "opacity 0.3s" }}
-                    opacity={
-                      activeIndex !== undefined && activeIndex !== index
-                        ? 0.6
-                        : 1
-                    }
-                  />
-                ))}
-              </Pie>
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* LEGENDA COM LÓGICA CONDICIONAL */}
-        <div className="chart-details">
-          {chartData.map((item: any, index) => {
-            // Lógica para aba GERAL
-            if (activeTab === "Geral") {
-              const percentOfTotal = ((item.value / total) * 100).toFixed(0);
-              return (
-                <div
-                  key={index}
-                  className={`legend-item ${
-                    index === activeIndex ? "active" : ""
-                  }`}
-                  onMouseEnter={() => setHoverIndex(index)}
+                <Pie
+                  // @ts-expect-error: Bug de tipagem do Recharts, activeIndex funciona em runtime
+                  activeIndex={activeIndex}
+                  activeShape={renderActiveShape}
+                  data={chartData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={85}
+                  outerRadius={125}
+                  dataKey="value"
+                  paddingAngle={2}
+                  stroke="none"
+                  animationDuration={500}
+                  animationBegin={0}
+                  onMouseEnter={(_, index) => setHoverIndex(index)}
                   onMouseLeave={() => setHoverIndex(null)}
-                  onClick={(e) => {
+                  onClick={(_, index, e) => {
                     e.stopPropagation();
                     setLockedIndex((prev) => (prev === index ? null : index));
                   }}
                 >
-                  <div
-                    className="legend-color"
-                    style={{ backgroundColor: item.fill }}
-                  ></div>
-                  <div className="legend-info">
-                    <div className="legend-name-value">
-                      <span className="legend-name">{item.name}</span>
-                      <span className="legend-value">{item.value} Obras</span>
-                    </div>
-                    <span className="legend-percent-right">
-                      {percentOfTotal}%
-                    </span>
-                  </div>
-                </div>
-              );
-            }
+                  {chartData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={entry.fill}
+                      style={{ outline: "none", transition: "opacity 0.3s" }}
+                      opacity={
+                        activeIndex !== undefined && activeIndex !== index
+                          ? 0.6
+                          : 1
+                      }
+                    />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "100%",
+                color: "#999",
+              }}
+            >
+              Sem dados nesta categoria
+            </div>
+          )}
+        </div>
 
-            // LÓGICA PARA ABAS "EM PROGRESSO" E "ATRASADAS"
-            // Definimos o texto base (Progresso ou Atraso)
-            const labelText =
-              activeTab === "Em progresso" ? "Progresso" : "Atraso";
+        <div className="chart-details">
+          {chartData.map((item, index) => {
+            let subText = "";
+            let valueText = "";
+
+            if (activeTab === "Geral") {
+              const percentOfTotal =
+                total > 0 ? ((item.value / total) * 100).toFixed(0) : 0;
+              valueText = `${item.value} Obras`;
+              subText = `${percentOfTotal}%`;
+            } else {
+              valueText = "Progresso:";
+              subText = `${item.statusPercent}%`;
+            }
 
             return (
               <div
@@ -280,13 +310,22 @@ export default function PieGraphic() {
                   style={{ backgroundColor: item.fill }}
                 ></div>
 
-                {/* Layout Vertical: Nome em cima, Porcentagem embaixo */}
-                <div className="legend-info-vertical">
-                  <span className="legend-name">{item.name}</span>
-                  <span className="legend-subtext">
-                    {labelText}: {item.statusPercent}%
-                  </span>
-                </div>
+                {activeTab === "Geral" ? (
+                  <div className="legend-info">
+                    <div className="legend-name-value">
+                      <span className="legend-name">{item.name}</span>
+                      <span className="legend-value">{valueText}</span>
+                    </div>
+                    <span className="legend-percent-right">{subText}</span>
+                  </div>
+                ) : (
+                  <div className="legend-info-vertical">
+                    <span className="legend-name">{item.name}</span>
+                    <span className="legend-subtext">
+                      {valueText} <strong>{subText}</strong>
+                    </span>
+                  </div>
+                )}
               </div>
             );
           })}

@@ -14,6 +14,11 @@ body {
   border-bottom: 1px solid #e0e0e0; /* Linha cinza sutil na parte inferior */
   width: 100%;
   box-sizing: border-box; /* Garante que o padding não afete a largura total */
+  z-index: 1400;
+  position: fixed; /* O segredo: fixa o elemento */
+  top: 0;
+  left: 0;
+  box-shadow: 0 2px 4px rgba(167, 167, 167, 0.1); /* Sombra opcional para destacar */
 }
 
 /* --- Lado Esquerdo --- */
@@ -61,10 +66,10 @@ body {
   justify-content: center;
   padding-right: 100px;
   gap: 10px;
-   /* Indica que é clicável (para um dropdown) */
+  /* Indica que é clicável (para um dropdown) */
 }
 
-.user-avatar-info{
+.user-avatar-info {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -77,8 +82,6 @@ body {
   width: 50px;
 
   object-fit: cover;
-
-
 }
 
 .user-info {
