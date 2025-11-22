@@ -56,6 +56,8 @@ function LoginPage() {
 
       if (response && response.success) {
         console.log("Login bem-sucedido:", response.nome);
+        // Salva o nome que veio do banco no navegador
+        localStorage.setItem("nome_usuario", response.nome);
         navigate("/TabRoutes"); // Redireciona
       } else {
         setLoginError("Falha desconhecida no login. Tente novamente.");

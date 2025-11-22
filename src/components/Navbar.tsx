@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import metroLogo from "../assets/metro-logo.png";
 import userAvatar from "../assets/user-avatar.png"; // O avatar azul com o símbolo do metrô
 import { Link } from "react-router-dom";
@@ -7,6 +7,18 @@ import { useNavigate } from "react-router-dom";
 
 function Navbar() {
   const navigate = useNavigate();
+  // --- 1. ESTADO PARA GUARDAR O NOME ---
+  const [nomeUsuario, setNomeUsuario] = useState("Visitante");
+
+  // --- 2. EFEITO QUE RODA AO CARREGAR A TELA ---
+  useEffect(() => {
+    // Busca o nome que salvamos na tela de Login
+    const nomeSalvo = localStorage.getItem("nome_usuario");
+
+    if (nomeSalvo) {
+      setNomeUsuario(nomeSalvo);
+    }
+  }, []);
 
   const handleLogout = () => {
     try {
@@ -47,7 +59,7 @@ function Navbar() {
             <img src={userAvatar} alt="Avatar" className="user-avatar" />
             <div className="user-info">
               <span>Olá!</span>
-              <strong>Rodrigo</strong>
+              <strong>{nomeUsuario}</strong>
             </div>
           </div>
           {/* Ícone de seta para baixo (dropdown) */}
@@ -67,11 +79,7 @@ function Navbar() {
             />
           </svg>
         </div>
-        <button
-          type="submit"
-          className="logout-button"
-          onClick={handleLogout}
-        >
+        <button type="submit" className="logout-button" onClick={handleLogout}>
           Log Out
         </button>
       </div>
