@@ -1,406 +1,397 @@
+import { Avatar } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom"; // 1. Import useNavigate
+// Adicione FaEdit e FaTrash
 import {
-  FaTimes,
-  FaRegImage,
-  FaCamera,
   FaEllipsisV,
+  FaRegImage,
+  FaSearch,
+  FaTimes,
+  FaEdit,
   FaTrash,
-  FaChevronLeft,
-  FaChevronRight,
-  FaLayerGroup,
-  FaArrowLeft, // 2. Import o ícone da seta
 } from "react-icons/fa";
-import {
-  getObraByIdRequest,
-  addRegistroRequest,
-  deleteRegistroRequest,
-} from "../services/httpsRequests";
-import type { ObraType, RegistroType } from "../types/Obra";
-import AIIcon from "./../assets/ai-icon.png";
-import "./WorksDetails.css";
+import { useNavigate } from "react-router-dom";
+import AreaGraphic from "../components/AreaGraphic";
+import PieGraphic from "../components/PieGraphic";
+import black from "./../assets/black.png";
+import linhaImg from "./../assets/linha.png";
+import seta from "./../assets/seta.png";
 import "./Main.css";
 
-const BASE_URL = "http://127.0.0.1:8000/";
+// Importe a nova função de deletar
+import {
+  createObraRequest,
+  listObrasRequest,
+  deleteObraRequest,
+} from "../services/httpsRequests";
+import type { ObraType } from "../types/Obra";
 
-function WorksDetails() {
-  const { id } = useParams();
-  const navigate = useNavigate(); // 3. Inicializa o hook de navegação
-  const [obra, setObra] = useState<ObraType | null>(null);
-  const [loading, setLoading] = useState(true);
+// ... (Mantenha o array de logs igual) ...
+const logs = [
+  {
+    user: "Rodrigo",
 
-  // --- ESTADOS DE CONTROLE (REGISTROS) ---
-  const [currentRegistro, setCurrentRegistro] = useState<RegistroType | null>(
-    null
-  );
-  const [photoIndex, setPhotoIndex] = useState(0);
+    avatarChar: "R",
 
-  // --- ESTADOS DE CONTROLE (MODELO BIM) ---
-  const [bimModalOpen, setBimModalOpen] = useState(false);
-  const [currentBimIndex, setCurrentBimIndex] = useState(0);
+    action: "adicionou uma nova foto em",
 
-  // Estados de UI
-  const [zoomImage, setZoomImage] = useState<string | null>(null);
-  const [openModal, setOpenModal] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [registroDate, setRegistroDate] = useState("");
+    target: "Estação Consolação.",
+  },
 
-  // Upload Múltiplo
+  {
+    user: "Mitchell",
+
+    avatarChar: "M",
+
+    action: "removeu uma nova foto em",
+
+    target: "Estação Consolação.",
+  },
+
+  {
+    user: "Taynah",
+
+    avatarChar: "T",
+
+    action: "adicionou uma nova foto em",
+
+    target: "Estação Consolação.",
+  },
+
+  {
+    user: "Henry",
+
+    avatarChar: "H",
+
+    action: "adicionou uma nova foto em",
+
+    target: "Estação Consolação.",
+  },
+
+  {
+    user: "Ramon",
+
+    avatarChar: "R",
+
+    action: "adicionou uma nova foto em",
+
+    target: "Estação Consolação.",
+  },
+];
+
+function MainPage() {
+  const [obras, setObras] = useState<ObraType[]>([]);
+  const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+
+  // --- ESTADO NOVO: Controla qual menu de obra está aberto (pelo ID) ---
+  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+
+  // Estados do Formulário
+  const [novoNome, setNovoNome] = useState("");
+  const [novaLinha, setNovaLinha] = useState("");
+  const [novoInicio, setNovoInicio] = useState("");
+  const [novoPrazo, setNovoPrazo] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Helper URL
-  const getFullUrl = (path: string) => (BASE_URL + path).replace(/\\/g, "/");
+  const carregarObras = async () => {
+    try {
+      const dados = await listObrasRequest();
+      setObras(dados);
+    } catch (error) {
+      console.error("Erro ao carregar obras:", error);
+    }
+  };
 
-  const carregarDetalhes = async () => {
-    // 1. Proteção: Se não tiver ID na URL, para o loading e sai
-    if (!id) {
-      setLoading(false);
+  // --- FUNÇÕES DE AÇÃO ---
+  const handleNavigate = (id: string) => {
+    navigate(`/obra/${id}`);
+  };
+
+  const toggleMenu = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Impede que o clique propague (embora agora esteja separado)
+    if (activeMenuId === id) {
+      setActiveMenuId(null); // Fecha se já estiver aberto
+    } else {
+      setActiveMenuId(id); // Abre este
+    }
+  };
+
+  const handleDeleteObra = async (id: string) => {
+    if (
+      window.confirm(
+        "Tem certeza que deseja excluir esta obra e todos os seus registros?"
+      )
+    ) {
+      try {
+        await deleteObraRequest(id);
+        alert("Obra excluída.");
+        setActiveMenuId(null);
+        carregarObras(); // Recarrega a lista
+      } catch (error) {
+        alert("Erro ao excluir obra.");
+      }
+    }
+  };
+
+  const handleEditObra = (id: string) => {
+    alert(`Editar obra ${id} (Funcionalidade futura)`);
+    setActiveMenuId(null);
+  };
+
+  // ... (Funções do Modal de Cadastro: handleClickOpen, handleClose, handleCadastrar... MANTENHA IGUAL) ...
+  const handleClickOpen = () => setOpen(true);
+  const handleClose = () => {
+    setOpen(false);
+    setNovoNome("");
+    setNovaLinha("");
+    setNovoInicio("");
+    setNovoPrazo("");
+    setSelectedFiles([]);
+  };
+  const handleUploadClick = () => fileInputRef.current?.click();
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files) setSelectedFiles(Array.from(event.target.files));
+  };
+  const handleCadastrar = async () => {
+    if (!novoNome || !novaLinha || !novoInicio || !novoPrazo) {
+      alert("Preencha todos os campos!");
       return;
     }
-
     try {
-      setLoading(true); // Garante que o loading apareça ao recarregar
-      const dados = await getObraByIdRequest(id);
-      setObra(dados);
-
-      if (dados.registros && dados.registros.length > 0) {
-        const ultimo = dados.registros[dados.registros.length - 1];
-        setCurrentRegistro(ultimo);
-        setPhotoIndex(0);
-      } else {
-        setCurrentRegistro(null);
-      }
+      await createObraRequest({
+        nome: novoNome,
+        linha: novaLinha,
+        data_inicio: novoInicio,
+        data_final: novoPrazo,
+        arquivos: selectedFiles,
+      });
+      handleClose();
+      await carregarObras();
+      alert("Obra cadastrada!");
     } catch (error) {
-      console.error("Erro ao carregar:", error);
-      // Opcional: setObra(null) para mostrar "Obra não encontrada"
-    } finally {
-      // 2. OBRIGATÓRIO: Desliga o loading aconteça o que acontecer
-      setLoading(false);
+      alert("Erro ao cadastrar.");
     }
   };
 
   useEffect(() => {
-    carregarDetalhes();
-  }, [id]);
+    carregarObras();
+  }, []);
 
-  // --- NAVEGAÇÃO REGISTROS ---
-  const handleNextPhoto = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (currentRegistro && currentRegistro.fotos.length > 1) {
-      setPhotoIndex((prev) => (prev + 1) % currentRegistro.fotos.length);
-    }
-  };
-
-  const handlePrevPhoto = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (currentRegistro && currentRegistro.fotos.length > 1) {
-      setPhotoIndex(
-        (prev) =>
-          (prev - 1 + currentRegistro.fotos.length) %
-          currentRegistro.fotos.length
-      );
-    }
-  };
-
-  // --- NAVEGAÇÃO BIM ---
-  const abrirBimModal = () => {
-    if (obra?.fotos && obra.fotos.length > 0) {
-      setCurrentBimIndex(0);
-      setBimModalOpen(true);
-    } else {
-      alert("Nenhuma imagem do Modelo BIM foi cadastrada nesta obra.");
-    }
-  };
-
-  const handleNextBim = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (obra?.fotos) {
-      setCurrentBimIndex((prev) => (prev + 1) % obra.fotos!.length);
-    }
-  };
-
-  const handlePrevBim = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (obra?.fotos) {
-      setCurrentBimIndex(
-        (prev) => (prev - 1 + obra.fotos!.length) % obra.fotos!.length
-      );
-    }
-  };
-
-  // --- AÇÕES ---
-  const selecionarRegistro = (reg: RegistroType) => {
-    setCurrentRegistro(reg);
-    setPhotoIndex(0);
-    setMenuOpen(false);
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) setSelectedFiles(Array.from(e.target.files));
-  };
-
-  const handleUploadRegistro = async () => {
-    if (selectedFiles.length === 0 || !id || !registroDate) {
-      alert("Selecione a data e pelo menos uma foto.");
-      return;
-    }
-    try {
-      await addRegistroRequest(id, selectedFiles, registroDate);
-      alert("Registro adicionado!");
-      setOpenModal(false);
-      setSelectedFiles([]);
-      setRegistroDate("");
-      carregarDetalhes();
-    } catch (error) {
-      alert("Erro ao enviar.");
-    }
-  };
-
-  const handleDeleteRegistro = async () => {
-    if (!id || !currentRegistro) return;
-    if (window.confirm("Excluir este Registro inteiro?")) {
-      try {
-        await deleteRegistroRequest(id, currentRegistro.id);
-        alert("Registro excluído.");
-        setMenuOpen(false);
-        carregarDetalhes();
-      } catch {
-        alert("Erro ao excluir.");
-      }
-    }
-  };
-
-  if (loading) return <div style={{ padding: 40 }}>Carregando...</div>;
-  if (!obra) return <div style={{ padding: 40 }}>Obra não encontrada.</div>;
-
-  // Variáveis auxiliares
-  const temFotos = currentRegistro && currentRegistro.fotos.length > 0;
-  const fotoAtualUrl = temFotos
-    ? getFullUrl(currentRegistro!.fotos[photoIndex])
-    : "";
-  const ehAlbumMultiplo = temFotos && currentRegistro!.fotos.length > 1;
-
-  // Variáveis para o BIM
-  const temFotosBim = obra.fotos && obra.fotos.length > 0;
-  const temMaisDeUmaFotoBim = obra.fotos && obra.fotos.length > 1;
+  // Fecha o menu se clicar fora (opcional, mas bom para UX)
+  useEffect(() => {
+    const closeMenu = () => setActiveMenuId(null);
+    window.addEventListener("click", closeMenu);
+    return () => window.removeEventListener("click", closeMenu);
+  }, []);
 
   return (
-    <div className="details-container">
-      {/* 4. Header Atualizado com Seta de Voltar */}
-      <div className="details-header">
-        <button
-          onClick={() => navigate("/main")}
-          style={{
-            background: "transparent",
-            border: "none",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            color: "#333",
-            fontSize: "1.2rem",
-            marginRight: "10px",
-          }}
-          title="Voltar para lista"
-        >
-          <FaArrowLeft />
-        </button>
+    <div className="main-container">
+      {/* ... (COLUNA ESQUERDA E CONTROLES IGUAL ANTES) ... */}
+      <div className="main-left-column">
+        <PieGraphic />
+        <div className="controlsTabela-Scroll">
+          <div className="Scroll"></div>
+          <div className="controls-tabela">
+            <div className="controls-section">
+              <div className="search-bar-wrapper">
+                <FaSearch className="search-icon" />
+                <input type="text" placeholder="Pesquisar..." />
+              </div>
+              <button className="add-button" onClick={handleClickOpen}>
+                Adicionar
+              </button>
+            </div>
 
-        <h1>{obra.nome}</h1>
-        <span className="tag-obra">Obra</span>
+            <div className="tabela">
+              <div className="contorno">
+                <div className="conteudo-ltr">
+                  <table className="tabela-passageiros">
+                    <thead>
+                      <tr>
+                        <th>Obra</th>
+                        <th>Progresso</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {obras.length === 0 ? (
+                        <tr>
+                          <td
+                            colSpan={3}
+                            style={{ textAlign: "center", padding: "20px" }}
+                          >
+                            Nenhuma obra encontrada.
+                          </td>
+                        </tr>
+                      ) : (
+                        obras.map((obra) => (
+                          // REMOVI O onClick DO TR!
+                          <tr key={obra.id}>
+                            {/* CÉLULA 1: CLICÁVEL (Vai para detalhes) */}
+                            <td
+                              className="clickable-cell"
+                              onClick={() => handleNavigate(obra.id)}
+                            >
+                              <div className="linha-estacao">
+                                <img src={linhaImg} alt="" />
+                                <div className="estacao">
+                                  <h3>{obra.nome}</h3>
+                                  <span>{obra.linha}</span>
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* CÉLULA 2: CLICÁVEL (Vai para detalhes) */}
+                            <td
+                              className="clickable-cell"
+                              onClick={() => handleNavigate(obra.id)}
+                            >
+                              <div className="progress-wrapper">
+                                <span className="progress-text">
+                                  {obra.progresso_atual}%
+                                </span>
+                                <div className="progress-bar-container">
+                                  <div
+                                    className="progress-bar-fill"
+                                    style={{
+                                      width: `${obra.progresso_atual}%`,
+                                    }}
+                                  ></div>
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* CÉLULA 3: AÇÕES (NÃO NAVEGA) */}
+                            <td
+                              className="action-cell"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <div
+                                onClick={(e) => toggleMenu(obra.id, e)}
+                                style={{
+                                  display: "inline-block",
+                                  padding: "5px",
+                                }}
+                              >
+                                <FaEllipsisV />
+                              </div>
+
+                              {/* O MENU SUSPENSO */}
+                              {activeMenuId === obra.id && (
+                                <div className="table-action-menu">
+                                  <div
+                                    className="table-menu-item"
+                                    onClick={() => handleEditObra(obra.id)}
+                                  >
+                                    <FaEdit /> Editar
+                                  </div>
+                                  <div
+                                    className="table-menu-item danger"
+                                    onClick={() => handleDeleteObra(obra.id)}
+                                  >
+                                    <FaTrash /> Deletar
+                                  </div>
+                                </div>
+                              )}
+                            </td>
+
+                            <td
+                              onClick={() => handleNavigate(obra.id)}
+                              className="clickable-cell"
+                            >
+                              <img src={seta} alt="seta" />
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="details-content">
-        <div className="left-gallery">
-          <div className="main-image-container">
-            {temFotos ? (
-              <>
-                <img
-                  src={fotoAtualUrl}
-                  alt="Destaque"
-                  className="main-image"
-                  onClick={() => setZoomImage(fotoAtualUrl)}
-                  title="Clique para ampliar"
-                />
-                <div className="image-overlay-date">
-                  {currentRegistro?.data}
-                  {ehAlbumMultiplo &&
-                    ` (${photoIndex + 1}/${currentRegistro!.fotos.length})`}
-                </div>
-                <div
-                  className="image-options-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setMenuOpen(!menuOpen);
+      {/* ... (COLUNA DIREITA E MODAL IGUAL ANTES) ... */}
+      <div className="main-right-column">
+        <AreaGraphic />
+        <div className="log-list-wrapper">
+          <div className="log-list-header">
+            <h2>Registros</h2>
+
+            <span className="recent-tag">Mais Recentes</span>
+          </div>
+          <ul className="log-list">
+            {logs.map((log, index) => (
+              <li key={index} className="log-list-item">
+                <img src={black} alt="" className="bars" />
+                <Avatar
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    bgcolor: "#001388",
+                    fontSize: "1rem",
+                    fontWeight: 500,
                   }}
                 >
-                  <FaEllipsisV />
-                </div>
-                {menuOpen && (
-                  <div className="options-menu">
-                    <div
-                      className="menu-item danger"
-                      onClick={handleDeleteRegistro}
-                    >
-                      <FaTrash /> Excluir Registro
-                    </div>
-                  </div>
-                )}
-                {ehAlbumMultiplo && (
-                  <>
-                    <button
-                      className="lightbox-nav-btn lightbox-prev"
-                      onClick={handlePrevPhoto}
-                    >
-                      <FaChevronLeft />
-                    </button>
-                    <button
-                      className="lightbox-nav-btn lightbox-next"
-                      onClick={handleNextPhoto}
-                    >
-                      <FaChevronRight />
-                    </button>
-                  </>
-                )}
-              </>
-            ) : (
-              <div
-                style={{
-                  height: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#888",
-                  background: "#eee",
-                }}
-              >
-                <FaCamera
-                  size={50}
-                  style={{ opacity: 0.3, marginBottom: 10 }}
-                />
-                <p>Nenhum registro selecionado</p>
-              </div>
-            )}
-          </div>
-
-          <div className="thumbnail-list">
-            {obra.registros?.map((reg, index) => {
-              const capaUrl =
-                reg.fotos.length > 0 ? getFullUrl(reg.fotos[0]) : "";
-              const isSelected = currentRegistro?.id === reg.id;
-
-              return (
-                <div key={reg.id} style={{ position: "relative" }}>
-                  <img
-                    src={capaUrl}
-                    alt={`Registro ${reg.data}`}
-                    className={`thumb-item ${isSelected ? "active" : ""}`}
-                    onClick={() => selecionarRegistro(reg)}
-                    title={`Data: ${reg.data} (${reg.fotos.length} fotos)`}
-                  />
-                  {reg.fotos.length > 1 && (
-                    <div
-                      style={{
-                        position: "absolute",
-                        bottom: 8,
-                        right: 5,
-                        color: "white",
-                        background: "rgba(0,0,0,0.6)",
-                        borderRadius: 3,
-                        padding: "2px 4px",
-                        fontSize: "0.7rem",
-                      }}
-                    >
-                      <FaLayerGroup />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="right-sidebar">
-          <div className="assistant-header">
-            <img src={AIIcon} alt="" width={25} />
-            <h2 className="assistant-title">Metro Assistant</h2>
-            <span className="tag-obra" style={{ marginLeft: "auto" }}>
-              {obra.nome}
-            </span>
-          </div>
-          <p className="date-text">
-            {currentRegistro?.data || "Sem registros"}
-          </p>
-          <p className="description-text">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin ac
-            turpis interdum erat venenatis accumsan. Suspendisse vitae pretium
-            purus. Sed pellentesque massa non urna porta fringilla. Proin ac
-            turpis interdum erat venenatis accumsan. Suspendisse vitae pretium
-            purus. Sed pellentesque massa non urna porta fringilla. Proin ac
-            turpis interdum erat venenatis accumsan. Suspendisse vitae pretium
-            purus. Sed pellentesque massa non urna porta fringilla .
-          </p>
-          <div className="action-buttons">
-            <button
-              className="btn-atualizar"
-              onClick={() => setOpenModal(true)}
-            >
-              Atualizar obra
-            </button>
-            <button className="btn-modelo" onClick={abrirBimModal}>
-              Ver Modelo BIM
-            </button>
-          </div>
+                  {log.avatarChar}
+                </Avatar>
+                <p className="log-item-text">
+                  <span className="log-user">{log.user}</span> {log.action}{" "}
+                  <strong className="log-target">{log.target}</strong>
+                </p>
+                <img src={seta} alt="" />
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
 
-      <div className="progress-footer">
-        <div className="progress-info">
-          <h3>Progresso:</h3>
-          <span className="progress-percent">{obra.progresso_atual}%</span>
-        </div>
-        <div className="progress-bar-bg">
-          <div
-            className="progress-bar-fill"
-            style={{ width: `${obra.progresso_atual}%` }}
-          ></div>
-        </div>
-      </div>
-
-      {/* MODAL DE UPLOAD */}
-      {openModal && (
+      {/* Modal de Cadastro (Mantido igual) */}
+      {open && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ height: "auto" }}>
+          <div className="modal-content">
+            {/* ... Campos do modal ... */}
             <div className="modal-header">
-              <FaTimes
-                className="close-icon"
-                onClick={() => setOpenModal(false)}
-              />
-              <h2 className="modal-title">Novo Registro</h2>
+              <FaTimes className="close-icon" onClick={handleClose} />
+              <h2 className="modal-title">Cadastro da Obra</h2>
             </div>
-            <div style={{ marginBottom: 15 }}>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: 5,
-                  fontSize: "0.9rem",
-                  color: "#333",
-                }}
-              >
-                Data do Registro:
-              </label>
-              <input
-                type="date"
-                className="modal-input"
-                value={registroDate}
-                onChange={(e) => setRegistroDate(e.target.value)}
-              />
-            </div>
-            <div
-              className="upload-area"
-              onClick={() => fileInputRef.current?.click()}
-            >
+            <input
+              type="text"
+              className="modal-input"
+              placeholder="Nome da obra"
+              value={novoNome}
+              onChange={(e) => setNovoNome(e.target.value)}
+            />
+            <input
+              type="text"
+              className="modal-input"
+              placeholder="Linha"
+              value={novaLinha}
+              onChange={(e) => setNovaLinha(e.target.value)}
+            />
+            <input
+              type="text"
+              className="modal-input"
+              placeholder="Data de Início"
+              onFocus={(e) => (e.target.type = "date")}
+              onBlur={(e) => (e.target.type = "text")}
+              value={novoInicio}
+              onChange={(e) => setNovoInicio(e.target.value)}
+            />
+            <input
+              type="text"
+              className="modal-input"
+              placeholder="Data de Prazo"
+              onFocus={(e) => (e.target.type = "date")}
+              onBlur={(e) => (e.target.type = "text")}
+              value={novoPrazo}
+              onChange={(e) => setNovoPrazo(e.target.value)}
+            />
+
+            <div className="upload-area" onClick={handleUploadClick}>
               {selectedFiles.length > 0 ? (
                 <div style={{ textAlign: "center" }}>
                   <FaRegImage
@@ -418,7 +409,9 @@ function WorksDetails() {
                 <>
                   <FaRegImage className="upload-icon" />
                   <span className="upload-text">
-                    Clique para adicionar fotos
+                    Adicionar fotos
+                    <br />
+                    do modelo BIM
                   </span>
                 </>
               )}
@@ -431,83 +424,14 @@ function WorksDetails() {
                 multiple
               />
             </div>
-            <button className="btn-cadastrar" onClick={handleUploadRegistro}>
-              Salvar Registro
+            <button className="btn-cadastrar" onClick={handleCadastrar}>
+              Cadastrar
             </button>
           </div>
-        </div>
-      )}
-
-      {/* LIGHTBOX ZOOM */}
-      {zoomImage && (
-        <div className="lightbox-overlay" onClick={() => setZoomImage(null)}>
-          <FaTimes
-            className="lightbox-close"
-            onClick={() => setZoomImage(null)}
-          />
-          <img
-            src={zoomImage}
-            alt="Zoom"
-            className="lightbox-image"
-            onClick={(e) => e.stopPropagation()}
-          />
-        </div>
-      )}
-
-      {/* LIGHTBOX DO MODELO BIM */}
-      {bimModalOpen && temFotosBim && (
-        <div
-          className="lightbox-overlay"
-          onClick={() => setBimModalOpen(false)}
-        >
-          <FaTimes
-            className="lightbox-close"
-            onClick={() => setBimModalOpen(false)}
-          />
-
-          {temMaisDeUmaFotoBim && (
-            <button
-              className="lightbox-nav-btn lightbox-prev"
-              onClick={handlePrevBim}
-            >
-              <FaChevronLeft />
-            </button>
-          )}
-
-          <img
-            src={getFullUrl(obra.fotos![currentBimIndex])}
-            alt={`BIM ${currentBimIndex}`}
-            className="lightbox-image"
-            onClick={(e) => e.stopPropagation()}
-          />
-
-          {temMaisDeUmaFotoBim && (
-            <button
-              className="lightbox-nav-btn lightbox-next"
-              onClick={handleNextBim}
-            >
-              <FaChevronRight />
-            </button>
-          )}
-
-          {temMaisDeUmaFotoBim && (
-            <div
-              style={{
-                position: "absolute",
-                bottom: 30,
-                color: "white",
-                background: "rgba(0,0,0,0.5)",
-                padding: "5px 10px",
-                borderRadius: 15,
-              }}
-            >
-              {currentBimIndex + 1} / {obra.fotos!.length}
-            </div>
-          )}
         </div>
       )}
     </div>
   );
 }
 
-export default WorksDetails;
+export default MainPage;
