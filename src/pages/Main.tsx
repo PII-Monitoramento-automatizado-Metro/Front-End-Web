@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Avatar } from "@mui/material";
 import { FaEllipsisV, FaSearch } from "react-icons/fa";
 import AreaGraphic from "../components/AreaGraphic";
@@ -6,6 +7,8 @@ import black from "./../assets/black.png";
 import linha from "./../assets/linha.png";
 import seta from "./../assets/seta.png";
 import "./Main.css"; // Ajuste o caminho conforme sua estrutura
+import { listObrasRequest } from "../services/httpsRequests";
+import type { ObraType } from "../types/Obra"; // Se tiver um arquivo de tipos
 
 // --- MOCK DATA ---
 // Mock data para a lista de estações
@@ -95,83 +98,104 @@ const logs = [
 ];
 
 function MainPage() {
+  // 2. CRIAR O ESTADO PARA ARMAZENAR AS OBRAS
+  const [obras, setObras] = useState<ObraType[]>([]);
+
+  // 3. BUSCAR DADOS DO BACKEND AO CARREGAR A PÁGINA
+  useEffect(() => {
+    const fetchObras = async () => {
+      try {
+        const dados = await listObrasRequest();
+        setObras(dados);
+      } catch (error) {
+        console.error("Erro ao carregar obras:", error);
+      }
+    };
+
+    fetchObras();
+  }, []);
+
   return (
     <div className="main-container">
-      {" "}
-      {/* Renomeei para main-container para evitar conflito com 'home' */}
       {/* ----- COLUNA ESQUERDA ----- */}
       <div className="main-left-column">
-        {/* Placeholder de Vídeo */}
         <PieGraphic />
         <div className="controlsTabela-Scroll">
           <div className="Scroll"></div>
           <div className="controls-tabela">
             <div className="controls-section">
               <div className="search-bar-wrapper">
-                {" "}
-                {/* Novo wrapper para a barra de pesquisa */}
                 <FaSearch className="search-icon" />
                 <input type="text" placeholder="Pesquisar..." />
               </div>
               <button className="add-button">Adicionar</button>
             </div>
 
-            {/* Seção de Controles (Pesquisa e Adicionar) */}
             <div className="tabela">
-              {/* Loading ou Tabela */}
               <div className="contorno">
                 <div className="conteudo-ltr">
                   <table className="tabela-passageiros">
                     <thead>
                       <tr>
-                        <th>Estação</th>
+                        <th>Obra</th> {/* Ajustei o título */}
                         <th>Progresso</th>
                         <th></th>
                       </tr>
                     </thead>
                     <tbody>
-                      {/* 1. O .map() cria o <tr> principal. Não adicione outro <tr>! */}
-                      {stations.map((station, index) => (
-                        <tr key={index}>
-                          {/* CÉLULA 1: ESTAÇÃO */}
-                          <div className="linha-estacao">
-                            <img src={linha} alt="" />
-
-                            <div className="estacao">
-                              <h3>Estação Consolação</h3>
-
-                              <span>Linha Verde</span>
-                            </div>
-                          </div>
-
-                          {/* CÉLULA 2: PROGRESSO */}
-                          <td>
-                            <div className="progress-wrapper">
-                              <span className="progress-text">
-                                {station.progress}%
-                              </span>
-                              <div className="progress-bar-container">
-                                <div
-                                  className="progress-bar-fill"
-                                  style={{ width: `${station.progress}%` }}
-                                ></div>
-                              </div>
-                            </div>
-                          </td>
-
-                          <td>
-                            <FaEllipsisV />
-                          </td>
-                          <td>
-                            <img src={seta} alt="seta" />
-                            {/* <FaPen
-												style={{ cursor: 'pointer', color: '#888' }}
-												onClick={() => {
-												}}
-											/> */}
+                      {/* Verifica se tem obras */}
+                      {obras.length === 0 ? (
+                        <tr>
+                          <td
+                            colSpan={3}
+                            style={{ textAlign: "center", padding: "20px" }}
+                          >
+                            Nenhuma obra encontrada.
                           </td>
                         </tr>
-                      ))}
+                      ) : (
+                        obras.map((obra) => (
+                          <tr key={obra.id}>
+                            {/* CÉLULA 1: ESTAÇÃO E LINHA */}
+                            <td>
+                              <div className="linha-estacao">
+                                <img src={linha} alt="" />
+                                <div className="estacao">
+                                  {/* AGORA USAMOS OS CAMPOS CERTOS DO SEU ARQUIVO .TS */}
+                                  <h3>{obra.nome}</h3>
+                                  <span>{obra.linha}</span>
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* CÉLULA 2: PROGRESSO REAL DO BANCO */}
+                            <td>
+                              <div className="progress-wrapper">
+                                <span className="progress-text">
+                                  {obra.progresso_atual}%
+                                </span>
+                                <div className="progress-bar-container">
+                                  <div
+                                    className="progress-bar-fill"
+                                    // Usa o valor dinâmico para definir a largura
+                                    style={{
+                                      width: `${obra.progresso_atual}%`,
+                                    }}
+                                  ></div>
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* CÉLULA 3: AÇÕES (Ícone e Seta) */}
+                            <td>
+                              <FaEllipsisV />
+                            </td>
+                            <td>
+                              <img src={seta} alt="seta" />
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -180,12 +204,11 @@ function MainPage() {
           </div>
         </div>
       </div>
-      {/* ----- COLUNA DIREITA ----- */}
+
+      {/* ----- COLUNA DIREITA (Mantida igual) ----- */}
       <div className="main-right-column">
-        {/* Placeholder de Vídeo */}
         <AreaGraphic />
 
-        {/* Lista de Registros */}
         <div className="log-list-wrapper">
           <div className="log-list-header">
             <h2>Registros</h2>
@@ -199,7 +222,7 @@ function MainPage() {
                   sx={{
                     width: 40,
                     height: 40,
-                    bgcolor: "#001388", // Cor de fundo do Avatar
+                    bgcolor: "#001388",
                     fontSize: "1rem",
                     fontWeight: 500,
                   }}

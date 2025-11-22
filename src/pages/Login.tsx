@@ -1,31 +1,74 @@
-import { TextField, IconButton, InputAdornment } from "@mui/material";
-import { useNavigate } from "react-router-dom";
-import loginIllustration from "./../assets/login-illustration.png"; // Ilustração da direita
-import metroLogo from "./../assets/metro-logo.png"; // Logo na cor escura
 import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { IconButton, InputAdornment, TextField } from "@mui/material";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { loginRequest } from "../services/httpsRequests";
+import loginIllustration from "./../assets/login-illustration.png";
+import metroLogo from "./../assets/metro-logo.png";
 import "./Login.css";
-import { useState } from "react";
 
 function LoginPage() {
   const navigate = useNavigate();
 
-  const handleLogin = () => {
-    try {
-      console.log("Login bem-sucedido:");
-      navigate("/main");
-    } catch (error) {
-      alert("Ocorreu um erro ao fazer login. Tente novamente.");
-      console.error(error);
-    }
-  };
-
+  // 1. DECLARAÇÃO DOS ESTADOS (DEVE FICAR NO TOPO)
+  const [funcional, setFuncional] = useState("");
+  const [senha, setSenha] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // 2. Funções para alternar o estado
-  const handleClickShowPassword = () => setShowPassword((show) => !show);
+  // 2. FUNÇÕES DE VALIDAÇÃO (AJUSTADAS)
+  const hasSenhaErrors = () => senha.length > 0 && senha.length < 4;
+  const hasFuncionalErrors = () =>
+    funcional.length > 0 && !funcional.includes("@");
 
+  // 3. FUNÇÕES AUXILIARES DE UI
+  const handleClickShowPassword = () => setShowPassword((show) => !show);
   const handleMouseDownPassword = (event: React.MouseEvent) => {
-    event.preventDefault(); // Impede que o clique "saia" do foco do input
+    event.preventDefault();
+  };
+
+  // 4. FUNÇÃO DE LOGIN (handleLogin)
+  const handleLogin = async (event: React.FormEvent) => {
+    event.preventDefault(); // Impede o recarregamento padrão do formulário
+
+    setLoginError("");
+
+    if (!funcional || !senha) {
+      setLoginError("Preencha o campo Funcional e a Senha.");
+      return;
+    }
+
+    if (hasFuncionalErrors() || hasSenhaErrors()) {
+      setLoginError(
+        "Verifique os campos digitados (formato do funcional ou tamanho da senha)."
+      );
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // Chamada à API
+      const response = await loginRequest(funcional.trim(), senha);
+
+      setLoading(false);
+
+      if (response && response.success) {
+        console.log("Login bem-sucedido:", response.nome);
+        navigate("/TabRoutes"); // Redireciona
+      } else {
+        setLoginError("Falha desconhecida no login. Tente novamente.");
+      }
+    } catch (error) {
+      // Tratamento de Erro (Falha HTTP 401, Erro de Rede, etc.)
+      setLoading(false);
+
+      setLoginError(
+        (error as Error).message ||
+          "Erro de conexão com o servidor. Verifique sua rede."
+      );
+    }
   };
 
   return (
@@ -35,33 +78,40 @@ function LoginPage() {
         <div className="login-header">
           <img src={metroLogo} alt="Metrô Logo" className="login-logo" />
         </div>
-
         <div className="login-form-area">
           <div className="texts">
             <h1>BEM-VINDO!</h1>
             <p className="login-subtitle">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam
-              ligula.
+              Entre para gerenciar e acompanhar o progresso das obras.
             </p>
           </div>
 
-          <form className="login-form">
+          {/* CONECTA O FORMULÁRIO COM O handleLogin via onSubmit */}
+          <form className="login-form" onSubmit={handleLogin}>
             <div className="textFields">
+              {/* CAMPO FUNCIONAL */}
               <TextField
                 className="email input"
                 label="Funcional"
                 type="text"
                 variant="outlined"
                 required
+                value={funcional}
+                onChange={(e) => setFuncional(e.target.value)}
+                error={hasFuncionalErrors()}
+                helperText={hasFuncionalErrors() ? "Funcional inválido" : ""}
               />
+              {/* CAMPO SENHA */}
               <TextField
                 className="senha input"
                 label="Senha"
                 variant="outlined"
                 required
-                // 3. Alterne o 'type' com base no estado
                 type={showPassword ? "text" : "password"}
-                // 4. Adicione o ícone clicável aqui
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+                error={hasSenhaErrors()}
+                helperText={hasSenhaErrors() ? "Senha muito curta" : ""}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
@@ -71,14 +121,18 @@ function LoginPage() {
                         onMouseDown={handleMouseDownPassword}
                         edge="end"
                         className="eye"
+                        disabled={loading}
                       >
-                        {/* 5. Alterne o ícone com base no estado */}
                         {showPassword ? <VisibilityOff /> : <Visibility />}
                       </IconButton>
                     </InputAdornment>
                   ),
                 }}
               />
+              {/* EXIBIÇÃO DO ERRO GERAL */}
+              {loginError && (
+                <p style={{ color: "red", marginTop: 10 }}>{loginError}</p>
+              )}
             </div>
             <div className="preferences">
               <div className="lembrar-usuario">
@@ -90,12 +144,8 @@ function LoginPage() {
               </div>
             </div>
 
-            <button
-              type="submit"
-              className="login-button"
-              onClick={handleLogin}
-            >
-              Entrar
+            <button type="submit" className="login-button" disabled={loading}>
+              {loading ? "Entrando..." : "Entrar"}
             </button>
           </form>
         </div>
