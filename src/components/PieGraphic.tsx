@@ -94,6 +94,8 @@ export default function PieGraphic() {
       : hoverIndex !== null
       ? hoverIndex
       : undefined;
+
+  // Total soma os valores (value) de todos os itens
   const total = chartData.reduce((sum, item) => sum + item.value, 0);
 
   // 1. Buscar dados do banco
@@ -141,6 +143,7 @@ export default function PieGraphic() {
     let dataTemp: ChartDataPoint[] = [];
 
     if (activeTab === "Geral") {
+      // Aba Geral: Value = Quantidade de obras (Contagem)
       dataTemp = [
         { name: "Concluídas", value: concluidas.length, fill: "#001388" },
         { name: "Em progresso", value: emProgresso.length, fill: "#9EA8E2" },
@@ -148,23 +151,27 @@ export default function PieGraphic() {
       ];
       dataTemp = dataTemp.filter((d) => d.value > 0);
     } else if (activeTab === "Em progresso") {
+      // Aba Em Progresso: Value = Porcentagem de Progresso (Peso visual)
       dataTemp = emProgresso.map((o) => ({
         name: o.nome,
-        value: 1,
+        // Se for 0, colocamos 1 para aparecer uma fatia mínima clicável, senão usa o progresso real
+        value: o.progresso_atual > 0 ? o.progresso_atual : 1,
         fill: getRandomColor(),
         statusPercent: o.progresso_atual,
       }));
     } else if (activeTab === "Atrasadas") {
+      // Aba Atrasadas: Value = Porcentagem de Progresso
       dataTemp = atrasadas.map((o) => ({
         name: o.nome,
-        value: 1,
+        value: o.progresso_atual > 0 ? o.progresso_atual : 1,
         fill: getRandomColor(),
         statusPercent: o.progresso_atual,
       }));
     } else if (activeTab === "Concluídas") {
+      // Aba Concluídas: Todas são 100%, então fatias iguais
       dataTemp = concluidas.map((o) => ({
         name: o.nome,
-        value: 1,
+        value: 100,
         fill: "#001388",
         statusPercent: 100,
       }));
@@ -227,7 +234,7 @@ export default function PieGraphic() {
                 </defs>
 
                 <Pie
-                  // @ts-expect-error: Bug de tipagem do Recharts, activeIndex funciona em runtime
+                  // @ts-expect-error: Bug de tipagem do Recharts
                   activeIndex={activeIndex}
                   activeShape={renderActiveShape}
                   data={chartData}
@@ -283,11 +290,14 @@ export default function PieGraphic() {
             let valueText = "";
 
             if (activeTab === "Geral") {
+              // Aba Geral: Calcula a % com base na quantidade total de obras
               const percentOfTotal =
                 total > 0 ? ((item.value / total) * 100).toFixed(0) : 0;
               valueText = `${item.value} Obras`;
               subText = `${percentOfTotal}%`;
             } else {
+              // Abas Específicas: O value aqui JÁ É o progresso (peso da fatia)
+              // Então mostramos o statusPercent direto
               valueText = "Progresso:";
               subText = `${item.statusPercent}%`;
             }

@@ -1,6 +1,5 @@
 import { Avatar } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
-// Adicione FaEdit e FaTrash
 import {
   FaEllipsisV,
   FaRegImage,
@@ -8,6 +7,7 @@ import {
   FaTimes,
   FaEdit,
   FaTrash,
+  FaSpinner,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import AreaGraphic from "../components/AreaGraphic";
@@ -17,73 +17,25 @@ import linhaImg from "./../assets/linha.png";
 import seta from "./../assets/seta.png";
 import "./Main.css";
 
-// Importe a nova função de deletar
 import {
   createObraRequest,
   listObrasRequest,
   deleteObraRequest,
+  listLogsRequest,
 } from "../services/httpsRequests";
 import type { ObraType } from "../types/Obra";
-
-// ... (Mantenha o array de logs igual) ...
-const logs = [
-  {
-    user: "Rodrigo",
-
-    avatarChar: "R",
-
-    action: "adicionou uma nova foto em",
-
-    target: "Estação Consolação.",
-  },
-
-  {
-    user: "Mitchell",
-
-    avatarChar: "M",
-
-    action: "removeu uma nova foto em",
-
-    target: "Estação Consolação.",
-  },
-
-  {
-    user: "Taynah",
-
-    avatarChar: "T",
-
-    action: "adicionou uma nova foto em",
-
-    target: "Estação Consolação.",
-  },
-
-  {
-    user: "Henry",
-
-    avatarChar: "H",
-
-    action: "adicionou uma nova foto em",
-
-    target: "Estação Consolação.",
-  },
-
-  {
-    user: "Ramon",
-
-    avatarChar: "R",
-
-    action: "adicionou uma nova foto em",
-
-    target: "Estação Consolação.",
-  },
-];
+import type { LogType } from "../types/log";
 
 function MainPage() {
   const [obras, setObras] = useState<ObraType[]>([]);
+  const [logs, setLogs] = useState<LogType[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // --- NOVO ESTADO PARA A PESQUISA ---
+  const [searchTerm, setSearchTerm] = useState("");
+
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
-
-  // --- ESTADO NOVO: Controla qual menu de obra está aberto (pelo ID) ---
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
 
   // Estados do Formulário
@@ -94,26 +46,41 @@ function MainPage() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const carregarObras = async () => {
+  const carregarDados = async () => {
+    setLoading(true);
     try {
-      const dados = await listObrasRequest();
-      setObras(dados);
+      const dadosObras = await listObrasRequest();
+      setObras(dadosObras);
+
+      const dadosLogs = await listLogsRequest();
+      setLogs(dadosLogs);
     } catch (error) {
-      console.error("Erro ao carregar obras:", error);
+      console.error("Erro ao carregar dados:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // --- FUNÇÕES DE AÇÃO ---
+  // --- LÓGICA DE FILTRO (A MÁGICA ACONTECE AQUI) ---
+  // Cria uma lista nova filtrando pelo nome OU pela linha (ignorando maiúsculas/minúsculas)
+  const obrasFiltradas = obras.filter((obra) => {
+    const termo = searchTerm.toLowerCase();
+    return (
+      obra.nome.toLowerCase().includes(termo) ||
+      obra.linha.toLowerCase().includes(termo)
+    );
+  });
+
   const handleNavigate = (id: string) => {
     navigate(`/obra/${id}`);
   };
 
   const toggleMenu = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // Impede que o clique propague (embora agora esteja separado)
+    e.stopPropagation();
     if (activeMenuId === id) {
-      setActiveMenuId(null); // Fecha se já estiver aberto
+      setActiveMenuId(null);
     } else {
-      setActiveMenuId(id); // Abre este
+      setActiveMenuId(id);
     }
   };
 
@@ -127,7 +94,7 @@ function MainPage() {
         await deleteObraRequest(id);
         alert("Obra excluída.");
         setActiveMenuId(null);
-        carregarObras(); // Recarrega a lista
+        carregarDados();
       } catch (error) {
         alert("Erro ao excluir obra.");
       }
@@ -139,7 +106,6 @@ function MainPage() {
     setActiveMenuId(null);
   };
 
-  // ... (Funções do Modal de Cadastro: handleClickOpen, handleClose, handleCadastrar... MANTENHA IGUAL) ...
   const handleClickOpen = () => setOpen(true);
   const handleClose = () => {
     setOpen(false);
@@ -167,7 +133,7 @@ function MainPage() {
         arquivos: selectedFiles,
       });
       handleClose();
-      await carregarObras();
+      await carregarDados();
       alert("Obra cadastrada!");
     } catch (error) {
       alert("Erro ao cadastrar.");
@@ -175,10 +141,9 @@ function MainPage() {
   };
 
   useEffect(() => {
-    carregarObras();
+    carregarDados();
   }, []);
 
-  // Fecha o menu se clicar fora (opcional, mas bom para UX)
   useEffect(() => {
     const closeMenu = () => setActiveMenuId(null);
     window.addEventListener("click", closeMenu);
@@ -187,7 +152,6 @@ function MainPage() {
 
   return (
     <div className="main-container">
-      {/* ... (COLUNA ESQUERDA E CONTROLES IGUAL ANTES) ... */}
       <div className="main-left-column">
         <PieGraphic />
         <div className="controlsTabela-Scroll">
@@ -196,7 +160,14 @@ function MainPage() {
             <div className="controls-section">
               <div className="search-bar-wrapper">
                 <FaSearch className="search-icon" />
-                <input type="text" placeholder="Pesquisar..." />
+
+                {/* --- INPUT CONECTADO AO ESTADO --- */}
+                <input
+                  type="text"
+                  placeholder="Pesquisar..."
+                  value={searchTerm} // Valor vem do estado
+                  onChange={(e) => setSearchTerm(e.target.value)} // Atualiza estado ao digitar
+                />
               </div>
               <button className="add-button" onClick={handleClickOpen}>
                 Adicionar
@@ -215,20 +186,46 @@ function MainPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {obras.length === 0 ? (
+                      {loading ? (
+                        <tr>
+                          <td
+                            colSpan={3}
+                            style={{ textAlign: "center", padding: "40px" }}
+                          >
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: "10px",
+                                color: "#001388",
+                              }}
+                            >
+                              <FaSpinner
+                                className="fa-spin"
+                                style={{ animation: "spin 2s linear infinite" }}
+                              />
+                              <span>Carregando obras...</span>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : obrasFiltradas.length === 0 ? (
+                        // USAMOS obrasFiltradas.length AO INVÉS DE obras.length
                         <tr>
                           <td
                             colSpan={3}
                             style={{ textAlign: "center", padding: "20px" }}
                           >
-                            Nenhuma obra encontrada.
+                            {/* Mensagem dinâmica */}
+                            {obras.length === 0
+                              ? "Nenhuma obra encontrada. Clique em Adicionar para começar."
+                              : "Nenhuma obra encontrada com este nome."}
                           </td>
                         </tr>
                       ) : (
-                        obras.map((obra) => (
-                          // REMOVI O onClick DO TR!
+                        // MAPEAR A LISTA FILTRADA
+                        obrasFiltradas.map((obra) => (
                           <tr key={obra.id}>
-                            {/* CÉLULA 1: CLICÁVEL (Vai para detalhes) */}
                             <td
                               className="clickable-cell"
                               onClick={() => handleNavigate(obra.id)}
@@ -242,7 +239,6 @@ function MainPage() {
                               </div>
                             </td>
 
-                            {/* CÉLULA 2: CLICÁVEL (Vai para detalhes) */}
                             <td
                               className="clickable-cell"
                               onClick={() => handleNavigate(obra.id)}
@@ -262,7 +258,6 @@ function MainPage() {
                               </div>
                             </td>
 
-                            {/* CÉLULA 3: AÇÕES (NÃO NAVEGA) */}
                             <td
                               className="action-cell"
                               onClick={(e) => e.stopPropagation()}
@@ -277,7 +272,6 @@ function MainPage() {
                                 <FaEllipsisV />
                               </div>
 
-                              {/* O MENU SUSPENSO */}
                               {activeMenuId === obra.id && (
                                 <div className="table-action-menu">
                                   <div
@@ -314,46 +308,52 @@ function MainPage() {
         </div>
       </div>
 
-      {/* ... (COLUNA DIREITA E MODAL IGUAL ANTES) ... */}
       <div className="main-right-column">
         <AreaGraphic />
         <div className="log-list-wrapper">
           <div className="log-list-header">
             <h2>Registros</h2>
-
             <span className="recent-tag">Mais Recentes</span>
           </div>
           <ul className="log-list">
-            {logs.map((log, index) => (
-              <li key={index} className="log-list-item">
-                <img src={black} alt="" className="bars" />
-                <Avatar
-                  sx={{
-                    width: 40,
-                    height: 40,
-                    bgcolor: "#001388",
-                    fontSize: "1rem",
-                    fontWeight: 500,
-                  }}
-                >
-                  {log.avatarChar}
-                </Avatar>
-                <p className="log-item-text">
-                  <span className="log-user">{log.user}</span> {log.action}{" "}
-                  <strong className="log-target">{log.target}</strong>
-                </p>
-                <img src={seta} alt="" />
+            {logs.length === 0 ? (
+              <li
+                className="log-list-item"
+                style={{ justifyContent: "center", color: "#999" }}
+              >
+                {loading ? "Atualizando..." : "Nenhuma atividade recente."}
               </li>
-            ))}
+            ) : (
+              logs.slice(0, 5).map((log) => (
+                <li key={log.id} className="log-list-item">
+                  <img src={black} alt="" className="bars" />
+                  <Avatar
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      bgcolor: "#001388",
+                      fontSize: "1rem",
+                      fontWeight: 500,
+                    }}
+                  >
+                    {log.avatarChar}
+                  </Avatar>
+                  <p className="log-item-text">
+                    <span className="log-user">{log.user}</span> {log.action}{" "}
+                    <strong className="log-target">{log.target}</strong>
+                  </p>
+                  <img src={seta} alt="" />
+                </li>
+              ))
+            )}
           </ul>
         </div>
       </div>
 
-      {/* Modal de Cadastro (Mantido igual) */}
+      {/* Modal de Cadastro */}
       {open && (
         <div className="modal-overlay">
           <div className="modal-content">
-            {/* ... Campos do modal ... */}
             <div className="modal-header">
               <FaTimes className="close-icon" onClick={handleClose} />
               <h2 className="modal-title">Cadastro da Obra</h2>

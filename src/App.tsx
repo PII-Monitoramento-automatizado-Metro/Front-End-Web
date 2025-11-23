@@ -11,16 +11,21 @@ import WorksDetails from "./pages/WorksDetails";
 
 
 function App() {
-    const location = useLocation();
+  const location = useLocation();
   const isLoginPage = location.pathname === "/"; // Verifica se está na página de login
 
   return (
     <div className="app-container">
-      {!isLoginPage && <Navbar />}{" "}
-      <div className="main-content">
+      {!isLoginPage && <Navbar />}
+
+      {/* AQUI ESTÁ A MUDANÇA: Style condicional */}
+      <div
+        className="main-content"
+        style={{ paddingTop: isLoginPage ? "0" : "80px" }}
+      >
         <Routes>
           <Route path="/" element={<Login />} />
-          <Route path="/main" element={<Main />} />{" "}
+          <Route path="/main" element={<Main />} />
           <Route path="/changeLog" element={<ChangeLog />} />
           <Route path="/config" element={<Config />} />
           <Route path="/obra/:id" element={<WorksDetails />} />

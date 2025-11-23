@@ -58,7 +58,7 @@ function Navbar() {
     <nav className="navbar-container">
       {/* Lado Esquerdo */}
       <div className="navbar-left">
-        <a href="/" className="navbar-logo-link">
+        <a href="/main" className="navbar-logo-link">
           <img src={metroLogo} alt="Metrô Logo" className="navbar-logo" />
         </a>
       </div>

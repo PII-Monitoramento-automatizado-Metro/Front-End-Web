@@ -10,14 +10,14 @@ import "./Login.css";
 function LoginPage() {
   const navigate = useNavigate();
 
-  // 1. DECLARAÇÃO DOS ESTADOS (DEVE FICAR NO TOPO)
+  // 1. DECLARAÇÃO DOS ESTADOS
   const [funcional, setFuncional] = useState("");
   const [senha, setSenha] = useState("");
   const [loginError, setLoginError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // 2. FUNÇÕES DE VALIDAÇÃO (AJUSTADAS)
+  // 2. FUNÇÕES DE VALIDAÇÃO
   const hasSenhaErrors = () => senha.length > 0 && senha.length < 4;
   const hasFuncionalErrors = () =>
     funcional.length > 0 && !funcional.includes("@");
@@ -28,9 +28,9 @@ function LoginPage() {
     event.preventDefault();
   };
 
-  // 4. FUNÇÃO DE LOGIN (handleLogin)
+  // 4. FUNÇÃO DE LOGIN
   const handleLogin = async (event: React.FormEvent) => {
-    event.preventDefault(); // Impede o recarregamento padrão do formulário
+    event.preventDefault();
 
     setLoginError("");
 
@@ -49,23 +49,23 @@ function LoginPage() {
     setLoading(true);
 
     try {
-      // Chamada à API
       const response = await loginRequest(funcional.trim(), senha);
 
       setLoading(false);
 
       if (response && response.success) {
         console.log("Login bem-sucedido:", response.nome);
-        // Salva o nome que veio do banco no navegador
+
+        // Salva dados importantes para a sessão
         localStorage.setItem("nome_usuario", response.nome);
-        navigate("/main"); // Redireciona
+        localStorage.setItem("user_funcional", response.funcional);
+
+        navigate("/main");
       } else {
         setLoginError("Falha desconhecida no login. Tente novamente.");
       }
     } catch (error) {
-      // Tratamento de Erro (Falha HTTP 401, Erro de Rede, etc.)
       setLoading(false);
-
       setLoginError(
         (error as Error).message ||
           "Erro de conexão com o servidor. Verifique sua rede."
@@ -74,7 +74,17 @@ function LoginPage() {
   };
 
   return (
-    <div className="login-page-container">
+    // ADICIONADO STYLE PARA FORÇAR TELA CHEIA E SEM SCROLL
+    <div
+      className="login-page-container"
+      style={{
+        height: "100vh",
+        width: "100vw",
+        overflow: "hidden",
+        margin: 0,
+        padding: 0,
+      }}
+    >
       {/* Lado Esquerdo: Formulário de Login */}
       <div className="login-left">
         <div className="login-header">
@@ -88,10 +98,8 @@ function LoginPage() {
             </p>
           </div>
 
-          {/* CONECTA O FORMULÁRIO COM O handleLogin via onSubmit */}
           <form className="login-form" onSubmit={handleLogin}>
             <div className="textFields">
-              {/* CAMPO FUNCIONAL */}
               <TextField
                 className="email input"
                 label="Funcional"
@@ -103,7 +111,6 @@ function LoginPage() {
                 error={hasFuncionalErrors()}
                 helperText={hasFuncionalErrors() ? "Funcional inválido" : ""}
               />
-              {/* CAMPO SENHA */}
               <TextField
                 className="senha input"
                 label="Senha"
@@ -131,7 +138,6 @@ function LoginPage() {
                   ),
                 }}
               />
-              {/* EXIBIÇÃO DO ERRO GERAL */}
               {loginError && (
                 <p style={{ color: "red", marginTop: 10 }}>{loginError}</p>
               )}

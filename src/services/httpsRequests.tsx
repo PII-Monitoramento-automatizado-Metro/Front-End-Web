@@ -4,8 +4,12 @@ import type { UserResponse } from "../types/User";
 
 const BASE_URL = "http://127.0.0.1:8000";
 
+// --- HELPER TO GET CURRENT USER ---
+const getFuncional = () =>
+  localStorage.getItem("user_funcional") || "Visitante";
+
 // -----------------------------------------------------------------
-// 1. AUTENTICAÇÃO
+// 1. AUTHENTICATION
 // -----------------------------------------------------------------
 
 export async function loginRequest(
@@ -36,6 +40,10 @@ export async function loginRequest(
   }
 }
 
+// -----------------------------------------------------------------
+// 2. OBRAS (WORKS)
+// -----------------------------------------------------------------
+
 export async function listObrasRequest(): Promise<ObraType[]> {
   try {
     const response = await fetch(`${BASE_URL}/obras`, {
@@ -56,12 +64,9 @@ export async function listObrasRequest(): Promise<ObraType[]> {
   }
 }
 
-export async function getUserDataRequest(
-  funcional: string
-): Promise<UserResponse> {
+export async function getObraByIdRequest(id: string): Promise<ObraType> {
   try {
-    // Chama a rota: http://127.0.0.1:8000/usuarios/12345
-    const response = await fetch(`${BASE_URL}/usuarios/${funcional}`, {
+    const response = await fetch(`${BASE_URL}/obras/${id}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -69,12 +74,12 @@ export async function getUserDataRequest(
     });
 
     if (!response.ok) {
-      throw new Error(`Erro ao buscar usuário: ${response.statusText}`);
+      throw new Error("Erro ao buscar detalhes da obra");
     }
 
     return await response.json();
   } catch (error) {
-    console.error("Erro no getUserDataRequest:", error);
+    console.error("Erro no getObraByIdRequest:", error);
     throw error;
   }
 }
@@ -84,7 +89,7 @@ export async function createObraRequest(obraData: {
   linha: string;
   data_inicio: string;
   data_final: string;
-  arquivos?: File[]; // <-- MUDOU DE 'arquivo' PARA 'arquivos' (Array)
+  arquivos?: File[];
 }) {
   try {
     const formData = new FormData();
@@ -93,8 +98,9 @@ export async function createObraRequest(obraData: {
     formData.append("data_inicio", obraData.data_inicio);
     formData.append("data_final", obraData.data_final);
 
-    // Se tiver arquivos, adiciona um por um com a MESMA chave "fotos"
-    // O backend entende isso como uma lista.
+    // SEND USER ID FOR LOGGING
+    formData.append("funcional_usuario", getFuncional());
+
     if (obraData.arquivos && obraData.arquivos.length > 0) {
       obraData.arquivos.forEach((arquivo) => {
         formData.append("fotos", arquivo);
@@ -118,38 +124,45 @@ export async function createObraRequest(obraData: {
   }
 }
 
-// Adicione no http_requests.ts
-
-export async function getObraByIdRequest(id: string): Promise<ObraType> {
+export async function deleteObraRequest(id: string) {
   try {
-    const response = await fetch(`${BASE_URL}/obras/${id}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    const funcional = getFuncional();
+    // Send user via URL query param for DELETE requests
+    const response = await fetch(
+      `${BASE_URL}/obras/${id}?funcional_usuario=${funcional}`,
+      {
+        method: "DELETE",
+      }
+    );
 
     if (!response.ok) {
-      throw new Error("Erro ao buscar detalhes da obra");
+      throw new Error("Erro ao excluir obra");
     }
-
     return await response.json();
   } catch (error) {
-    console.error("Erro no getObraByIdRequest:", error);
+    console.error("Erro no deleteObraRequest:", error);
     throw error;
   }
 }
 
-// Atualize os argumentos da função
-// Note: mudei o nome do parametro para 'arquivos' (plural)
-export async function addRegistroRequest(idObra: string, arquivos: File[], data: string) {
+// -----------------------------------------------------------------
+// 3. REGISTROS (RECORDS)
+// -----------------------------------------------------------------
+
+export async function addRegistroRequest(
+  idObra: string,
+  arquivos: File[],
+  data: string
+) {
   try {
     const formData = new FormData();
     formData.append("data", data);
 
-    // Adiciona cada arquivo com a mesma chave 'fotos' (para o FastAPI ler como lista)
+    // SEND USER ID FOR LOGGING
+    formData.append("funcional_usuario", getFuncional());
+
     arquivos.forEach((arquivo) => {
-        formData.append("fotos", arquivo); 
+      formData.append("fotos", arquivo);
     });
 
     const response = await fetch(`${BASE_URL}/obras/${idObra}/registros`, {
@@ -170,8 +183,10 @@ export async function deleteRegistroRequest(
   idRegistro: string
 ) {
   try {
+    const funcional = getFuncional();
+    // Send user via URL query param
     const response = await fetch(
-      `${BASE_URL}/obras/${idObra}/registros/${idRegistro}`,
+      `${BASE_URL}/obras/${idObra}/registros/${idRegistro}?funcional_usuario=${funcional}`,
       {
         method: "DELETE",
         headers: {
@@ -191,18 +206,28 @@ export async function deleteRegistroRequest(
   }
 }
 
-export async function deleteObraRequest(id: string) {
+// -----------------------------------------------------------------
+// 4. USERS & LOGS
+// -----------------------------------------------------------------
+
+export async function getUserDataRequest(
+  funcional: string
+): Promise<UserResponse> {
   try {
-    const response = await fetch(`${BASE_URL}/obras/${id}`, {
-      method: "DELETE",
+    const response = await fetch(`${BASE_URL}/usuarios/${funcional}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
 
     if (!response.ok) {
-      throw new Error("Erro ao excluir obra");
+      throw new Error(`Erro ao buscar usuário: ${response.statusText}`);
     }
+
     return await response.json();
   } catch (error) {
-    console.error("Erro no deleteObraRequest:", error);
+    console.error("Erro no getUserDataRequest:", error);
     throw error;
   }
 }
@@ -218,6 +243,6 @@ export async function listLogsRequest(): Promise<LogType[]> {
     return await response.json();
   } catch (error) {
     console.error(error);
-    return []; // Retorna vazio se der erro
+    return [];
   }
 }

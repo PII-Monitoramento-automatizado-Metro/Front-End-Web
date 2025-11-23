@@ -17,7 +17,7 @@ body {
 /* Container principal da página */
 .login-page-container {
   display: flex;
-  min-height: 100vh; /* Ocupa a altura total da viewport */
+height: 100vh; /* Ocupa a altura total da viewport */
   background-color: #f0f2f5; /* Cor de fundo suave para toda a página */
 }
 
@@ -29,7 +29,7 @@ body {
   justify-content: center; /* Alinha o conteúdo ao topo */
   align-items: center; /* Alinha o conteúdo à esquerda */
   padding-left: 40px;
-  padding-block: 80px;
+  padding-block: 30px;
   background-color: #ffffff;
   width: 60%;
 }
@@ -64,6 +64,7 @@ body {
 
 .texts {
   margin-bottom: 80px;
+  text-align: center;
 }
 
 .login-subtitle {
@@ -74,6 +75,7 @@ body {
   color: #525252;
   margin-bottom: 40px; /* Espaço abaixo do subtítulo */
   line-height: 1.5;
+  text-align: center;
 }
 
 .textFields {
