@@ -22,7 +22,7 @@ const getRandomColor = () => {
   return color;
 };
 
-const tabs = ["Geral", "Em progresso", "Atrasadas", "Concluídas"];
+const tabs = ["Geral", "Em progresso", "Atrasadas"];
 
 // --- RENDERIZAÇÃO VISUAL ---
 const renderActiveShape = (props: any) => {
