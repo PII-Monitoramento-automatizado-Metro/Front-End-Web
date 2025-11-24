@@ -24,7 +24,7 @@ import {
   listLogsRequest,
 } from "../services/httpsRequests";
 import type { ObraType } from "../types/Obra";
-import type { LogType } from "../types/log";
+import type { LogType } from "../types/Log";
 
 function MainPage() {
   const [obras, setObras] = useState<ObraType[]>([]);

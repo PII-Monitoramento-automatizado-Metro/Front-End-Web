@@ -31,18 +31,10 @@ function LoginPage() {
   // 4. FUNÇÃO DE LOGIN
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
-
     setLoginError("");
 
     if (!funcional || !senha) {
-      setLoginError("Preencha o campo Funcional e a Senha.");
-      return;
-    }
-
-    if (hasFuncionalErrors() || hasSenhaErrors()) {
-      setLoginError(
-        "Verifique os campos digitados (formato do funcional ou tamanho da senha)."
-      );
+      setLoginError("Preencha os campos.");
       return;
     }
 
@@ -50,26 +42,37 @@ function LoginPage() {
 
     try {
       const response = await loginRequest(funcional.trim(), senha);
-
       setLoading(false);
 
       if (response && response.success) {
-        console.log("Login bem-sucedido:", response.nome);
+        console.log("Resposta do Login:", response); // Debug no console
 
-        // Salva dados importantes para a sessão
-        localStorage.setItem("nome_usuario", response.nome);
-        localStorage.setItem("user_funcional", response.funcional);
+        // --- CORREÇÃO DE SEGURANÇA AQUI ---
+        // Tenta pegar o nome da raiz ou de dentro do user_data
+        const nomeParaSalvar =
+          response.nome || response.user_data?.nome || "Usuário";
+        const funcionalParaSalvar =
+          response.funcional || response.user_data?.funcional;
 
-        navigate("/main");
+        if (nomeParaSalvar && funcionalParaSalvar) {
+          // Limpa dados antigos para garantir
+          localStorage.clear();
+
+          // Salva os novos dados limpos
+          localStorage.setItem("nome_usuario", nomeParaSalvar);
+          localStorage.setItem("user_funcional", funcionalParaSalvar);
+
+          console.log("Dados salvos no navegador:", nomeParaSalvar);
+          navigate("/main");
+        } else {
+          setLoginError("Erro ao processar dados do usuário.");
+        }
       } else {
-        setLoginError("Falha desconhecida no login. Tente novamente.");
+        setLoginError("Credenciais inválidas.");
       }
     } catch (error) {
       setLoading(false);
-      setLoginError(
-        (error as Error).message ||
-          "Erro de conexão com o servidor. Verifique sua rede."
-      );
+      setLoginError("Erro de conexão. Verifique se o Backend está rodando.");
     }
   };
 

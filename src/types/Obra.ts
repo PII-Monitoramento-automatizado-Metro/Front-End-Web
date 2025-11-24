@@ -1,12 +1,29 @@
-// Este arquivo define o "formato" dos dados para o TypeScript
+// src/types/Obra.ts
 
-// 1. O formato de uma Obra (igual ao que o Backend espera/envia)
+// 1. Definição do objeto de Foto
+export interface FotoType {
+  public_url: string; // O link acessível pelo navegador
+  gs_uri?: string; // O link interno do Google (opcional)
+  nome_original?: string; // Nome do arquivo (opcional)
+}
+
+// --- ADICIONE ISTO AQUI (ESTAVA FALTANDO) ---
+export interface AnaliseType {
+  descricao: string;
+  porcentagem_conclusao: number;
+}
+// --------------------------------------------
+
+// 2. Formato de um Registro (Álbum de fotos)
 export interface RegistroType {
   id: string;
   data: string;
-  fotos: string[]; // <-- AGORA É UM ARRAY DE STRINGS
+  // Aceita lista de strings (legado) OU lista de objetos FotoType (novo)
+  fotos: (string | FotoType)[];
+  analise?: AnaliseType; // Agora o TS sabe o que é isso
 }
 
+// 3. Formato da Obra Principal
 export interface ObraType {
   id: string;
   nome: string;
@@ -14,22 +31,24 @@ export interface ObraType {
   progresso_atual: number;
   data_inicio: string;
   data_final: string;
-  // Agora temos uma lista de registros em vez de fotos soltas
+  status_calculado?: "concluida" | "atrasada" | "em_progresso";
   registros?: RegistroType[];
-  fotos?: string[]; // Mantemos por compatibilidade antiga, se quiser
+
+  // Fotos de referência (Modelo BIM)
+  fotos?: (string | FotoType)[];
 }
 
-// 2. O formato da resposta quando criamos uma obra
+// 4. Respostas de API
 export interface CreateResponse {
   success: boolean;
   message: string;
   id: string;
 }
 
-// 3. O formato dos dados do usuário (usado no login)
+// 5. Dados do Usuário
 export interface UserData {
   _id: string;
   nome: string;
   funcional: string;
-  [key: string]: any; // Permite outros campos extras
+  [key: string]: any;
 }

@@ -1,63 +1,88 @@
 import { useEffect, useRef, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import {
-  FaTimes,
-  FaRegImage,
+  FaArrowLeft,
   FaCamera,
-  FaEllipsisV,
-  FaTrash,
   FaChevronLeft,
   FaChevronRight,
+  FaEllipsisV,
   FaLayerGroup,
-  FaArrowLeft,
+  FaRegImage,
+  FaSpinner,
+  FaTimes,
+  FaTrash,
 } from "react-icons/fa";
+import { useNavigate, useParams } from "react-router-dom";
 import {
-  getObraByIdRequest,
-  addRegistroRequest,
+  analisarObraRequest,
   deleteRegistroRequest,
+  getObraByIdRequest,
 } from "../services/httpsRequests";
-import type { ObraType, RegistroType } from "../types/Obra";
+// Importando os tipos atualizados (FotoType é essencial agora)
+import type { FotoType, ObraType, RegistroType } from "../types/Obra";
 import AIIcon from "./../assets/ai-icon.png";
-import "./WorksDetails.css";
 import "./Main.css";
+import "./WorksDetails.css";
 
 const BASE_URL = "http://127.0.0.1:8000/";
 
 function WorksDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [obra, setObra] = useState<ObraType | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // --- ESTADOS DE CONTROLE (REGISTROS) ---
+  // --- ESTADOS DE CONTROLE ---
   const [currentRegistro, setCurrentRegistro] = useState<RegistroType | null>(
     null
   );
-  const [photoIndex, setPhotoIndex] = useState(0);
+  const [photoIndex, setPhotoIndex] = useState(0); // Índice da foto dentro do álbum
 
-  // --- ESTADOS DE CONTROLE (MODELO BIM) ---
+  // BIM
   const [bimModalOpen, setBimModalOpen] = useState(false);
   const [currentBimIndex, setCurrentBimIndex] = useState(0);
 
-  // Estados de UI
+  // UI
   const [zoomImage, setZoomImage] = useState<string | null>(null);
   const [openModal, setOpenModal] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [registroDate, setRegistroDate] = useState("");
-  const navigate = useNavigate();
 
-  // Upload Múltiplo
+  // Upload
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  // Helper URL
-  const getFullUrl = (path: string) => (BASE_URL + path).replace(/\\/g, "/");
+  // --- FUNÇÃO HELPER INTELIGENTE (ESSENCIAL) ---
+  // Resolve a URL da imagem, seja string antiga ou objeto novo do Google Cloud
+  const getImgSrc = (foto: string | FotoType): string => {
+    let path = "";
 
+    // 1. Se for objeto (formato novo), pega a public_url
+    if (typeof foto === "object" && foto !== null) {
+      path = foto.public_url;
+    }
+    // 2. Se for string (formato antigo), usa direto
+    else if (typeof foto === "string") {
+      path = foto;
+    }
+
+    // 3. Se já começa com http (Google Cloud), retorna direto
+    if (path.startsWith("http")) {
+      return path;
+    }
+
+    // 4. Se não, é local (uploads/...), adiciona o localhost
+    return (BASE_URL + path).replace(/\\/g, "/");
+  };
+
+  // --- CARREGAMENTO ---
   const carregarDetalhes = async () => {
     if (!id) return;
     try {
       const dados = await getObraByIdRequest(id);
       setObra(dados);
 
+      // Seleciona o último registro por padrão
       if (dados.registros && dados.registros.length > 0) {
         const ultimo = dados.registros[dados.registros.length - 1];
         setCurrentRegistro(ultimo);
@@ -76,7 +101,7 @@ function WorksDetails() {
     carregarDetalhes();
   }, [id]);
 
-  // --- NAVEGAÇÃO REGISTROS ---
+  // --- NAVEGAÇÃO DENTRO DO ÁLBUM (REGISTROS) ---
   const handleNextPhoto = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (currentRegistro && currentRegistro.fotos.length > 1) {
@@ -133,19 +158,28 @@ function WorksDetails() {
   };
 
   const handleUploadRegistro = async () => {
+    // Validação: verifica se tem data também
     if (selectedFiles.length === 0 || !id || !registroDate) {
-      alert("Selecione a data e pelo menos uma foto.");
+      alert("Selecione uma data e pelo menos uma foto.");
       return;
     }
+
+    setIsAnalyzing(true);
+
     try {
-      await addRegistroRequest(id, selectedFiles, registroDate);
-      alert("Registro adicionado!");
+      // Passa a data (registroDate) para a função
+      await analisarObraRequest(id, selectedFiles, registroDate);
+
+      alert("Análise concluída e registro salvo!");
       setOpenModal(false);
       setSelectedFiles([]);
       setRegistroDate("");
       carregarDetalhes();
     } catch (error) {
-      alert("Erro ao enviar.");
+      console.error(error);
+      alert("Erro ao processar imagens.");
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -166,19 +200,21 @@ function WorksDetails() {
   if (loading) return <div style={{ padding: 40 }}>Carregando...</div>;
   if (!obra) return <div style={{ padding: 40 }}>Obra não encontrada.</div>;
 
-  // Variáveis auxiliares
+  // Variáveis auxiliares de renderização
   const temFotos = currentRegistro && currentRegistro.fotos.length > 0;
-  const fotoAtualUrl = temFotos
-    ? getFullUrl(currentRegistro!.fotos[photoIndex])
-    : "";
-  const ehAlbumMultiplo = temFotos && currentRegistro!.fotos.length > 1;
 
-  // Variáveis para o BIM
+  // AQUI USAMOS O HELPER getImgSrc:
+  const fotoAtualUrl = temFotos
+    ? getImgSrc(currentRegistro!.fotos[photoIndex])
+    : "";
+
+  const ehAlbumMultiplo = temFotos && currentRegistro!.fotos.length > 1;
   const temFotosBim = obra.fotos && obra.fotos.length > 0;
   const temMaisDeUmaFotoBim = obra.fotos && obra.fotos.length > 1;
 
   return (
     <div className="details-container">
+      {/* HEADER */}
       <div className="details-header">
         <button
           onClick={() => navigate("/main")}
@@ -186,10 +222,11 @@ function WorksDetails() {
             background: "transparent",
             border: "none",
             cursor: "pointer",
-            fontSize: "1.5rem",
-            color: "#333",
             display: "flex",
             alignItems: "center",
+            color: "#333",
+            fontSize: "1.2rem",
+            marginRight: "10px",
           }}
           title="Voltar para lista"
         >
@@ -200,6 +237,7 @@ function WorksDetails() {
       </div>
 
       <div className="details-content">
+        {/* ESQUERDA: GALERIA */}
         <div className="left-gallery">
           <div className="main-image-container">
             {temFotos ? (
@@ -212,10 +250,14 @@ function WorksDetails() {
                   title="Clique para ampliar"
                 />
                 <div className="image-overlay-date">
-                  {currentRegistro?.data}
+                  {currentRegistro?.data
+                    ? new Date(currentRegistro.data).toLocaleDateString("pt-BR")
+                    : ""}
                   {ehAlbumMultiplo &&
                     ` (${photoIndex + 1}/${currentRegistro!.fotos.length})`}
                 </div>
+
+                {/* Botão de Opções */}
                 <div
                   className="image-options-btn"
                   onClick={(e) => {
@@ -235,6 +277,8 @@ function WorksDetails() {
                     </div>
                   </div>
                 )}
+
+                {/* Setas de Navegação do Álbum */}
                 {ehAlbumMultiplo && (
                   <>
                     <button
@@ -273,11 +317,14 @@ function WorksDetails() {
             )}
           </div>
 
+          {/* MINIATURAS DOS REGISTROS (TIMELINE) */}
           <div className="thumbnail-list">
             {obra.registros?.map((reg, index) => {
+              // Capa do registro (primeira foto) usando o helper
               const capaUrl =
-                reg.fotos.length > 0 ? getFullUrl(reg.fotos[0]) : "";
+                reg.fotos.length > 0 ? getImgSrc(reg.fotos[0]) : "";
               const isSelected = currentRegistro?.id === reg.id;
+
               return (
                 <div key={reg.id} style={{ position: "relative" }}>
                   <img
@@ -309,6 +356,7 @@ function WorksDetails() {
           </div>
         </div>
 
+        {/* DIREITA: SIDEBAR */}
         <div className="right-sidebar">
           <div className="assistant-header">
             <img src={AIIcon} alt="" width={25} />
@@ -318,16 +366,33 @@ function WorksDetails() {
             </span>
           </div>
           <p className="date-text">
-            {currentRegistro?.data || "Sem registros"}
+            {currentRegistro?.data
+              ? new Date(currentRegistro.data).toLocaleDateString("pt-BR")
+              : "Sem registros"}
           </p>
           <p className="description-text">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin ac
-            turpis interdum erat venenatis accumsan. Suspendisse vitae pretium
-            purus. Sed pellentesque massa non urna porta fringilla. Proin ac
-            turpis interdum erat venenatis accumsan. Suspendisse vitae pretium
-            purus. Sed pellentesque massa non urna porta fringilla. Proin ac
-            turpis interdum erat venenatis accumsan. Suspendisse vitae pretium
-            purus. Sed pellentesque massa non urna porta fringilla .
+            {currentRegistro?.analise?.descricao ? (
+              // CASO 1: Tem análise da IA, mostra a descrição
+              currentRegistro.analise.descricao
+            ) : (
+              // CASO 2: Não tem análise (ou nenhum registro selecionado), mostra dados gerais
+              <>
+                Acompanhamento da linha: <strong>{obra.linha}</strong>
+                <br />
+                Início: {obra.data_inicio} | Fim: {obra.data_final}
+                <br />
+                <br />
+                <span
+                  style={{
+                    color: "#999",
+                    fontSize: "0.9rem",
+                    fontStyle: "italic",
+                  }}
+                >
+                  (Selecione um registro com análise para ver os detalhes da IA)
+                </span>
+              </>
+            )}
           </p>
           <div className="action-buttons">
             <button
@@ -343,6 +408,7 @@ function WorksDetails() {
         </div>
       </div>
 
+      {/* FOOTER */}
       <div className="progress-footer">
         <div className="progress-info">
           <h3>Progresso:</h3>
@@ -390,14 +456,24 @@ function WorksDetails() {
               onClick={() => fileInputRef.current?.click()}
             >
               {selectedFiles.length > 0 ? (
-                <div style={{ textAlign: "center" }}>
+                <div className="upload-container">
                   <FaRegImage
                     className="upload-icon"
-                    style={{ color: "#001388" }}
+                    style={{
+                      color: "#001388",
+                      display: "flex",
+                      justifyContent: "center",
+                    }}
                   />
                   <span
                     className="upload-text"
-                    style={{ color: "#001388", fontWeight: "bold" }}
+                    style={{
+                      color: "#001388",
+                      fontWeight: "bold",
+                      textAlign: "center",
+                      display: "flex",
+                      justifyContent: "center",
+                    }}
                   >
                     {selectedFiles.length} fotos selecionadas
                   </span>
@@ -419,14 +495,31 @@ function WorksDetails() {
                 multiple
               />
             </div>
-            <button className="btn-cadastrar" onClick={handleUploadRegistro}>
-              Salvar Registro
+            <button
+              className="btn-cadastrar"
+              onClick={handleUploadRegistro}
+              disabled={isAnalyzing}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "10px",
+                opacity: isAnalyzing ? 0.7 : 1,
+              }}
+            >
+              {isAnalyzing ? (
+                <>
+                  <FaSpinner className="fa-spin" /> Analisando...
+                </>
+              ) : (
+                "Analisar e Salvar"
+              )}
             </button>
           </div>
         </div>
       )}
 
-      {/* LIGHTBOX ZOOM (REGISTROS) */}
+      {/* LIGHTBOX ZOOM */}
       {zoomImage && (
         <div className="lightbox-overlay" onClick={() => setZoomImage(null)}>
           <FaTimes
@@ -442,7 +535,7 @@ function WorksDetails() {
         </div>
       )}
 
-      {/* --- NOVO: LIGHTBOX DO MODELO BIM (Estava faltando) --- */}
+      {/* LIGHTBOX BIM */}
       {bimModalOpen && temFotosBim && (
         <div
           className="lightbox-overlay"
@@ -463,7 +556,8 @@ function WorksDetails() {
           )}
 
           <img
-            src={getFullUrl(obra.fotos![currentBimIndex])}
+            // Usa o helper aqui também!
+            src={getImgSrc(obra.fotos![currentBimIndex])}
             alt={`BIM ${currentBimIndex}`}
             className="lightbox-image"
             onClick={(e) => e.stopPropagation()}

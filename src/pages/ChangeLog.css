@@ -1,0 +1,174 @@
+/* Container Principal */
+.changelog-container {
+  padding: 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-family: 'Poppins', sans-serif;
+  background-color: #fff;
+}
+
+/* --- HEADER --- */
+.changelog-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.changelog-header h1 {
+   margin: 0;
+  font-size: 40px;
+  font-weight: 600;
+  color: #000000;
+}
+
+
+.tag-geral {
+  background-color: #ffffff;
+  color: #7f7f7f;
+  padding: 5px 30px;
+  border-radius: 24px;
+  border: #c2c2c2 1px solid;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* --- BARRA DE PESQUISA --- */
+.search-area {
+  margin-bottom: 20px;
+}
+
+/* Customização do Input do MUI para parecer com o da imagem */
+.search-input fieldset {
+  border-color: #ccc;
+  border-radius: 8px;
+}
+
+/* --- BARRA DE CONTROLES (FILTROS) --- */
+.controls-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.control-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #555;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.filter-group {
+  display: flex;
+  gap: 15px;
+}
+
+/* --- LISTA DE REGISTROS --- */
+.logs-list-container {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  background-color: #fff;
+  overflow-y: scroll;
+  height: 50vh;
+}
+
+.logs-list-container::-webkit-scrollbar {
+  width: 12px; /* Largura do scrollbar */
+}
+
+.logs-list-container::-webkit-scrollbar-track {
+  background-color: #d9d9d9; /* Cor do fundo do track */
+  border-radius: 10px; /* Bordas arredondadas do track */
+}
+
+.logs-list-container::-webkit-scrollbar-thumb {
+  background-color: #ffffff; /* Cor do thumb */
+  border-radius: 8px; /* Bordas arredondadas do thumb */
+  border: #a2a2a2 1px solid;
+}
+
+.logs-list-container::-webkit-scrollbar-thumb:hover {
+  background-color: #ffffff; /* Cor do thumb ao passar o mouse */
+}
+
+.logs-list-container::-webkit-scrollbar-button {
+  display: none; /* Esconde os botões do scrollbar (se houver) */
+}
+
+.log-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s;
+}
+
+.log-row:last-child {
+  border-bottom: none;
+}
+
+.log-row:hover {
+  background-color: #fafafa;
+}
+
+.log-content {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.log-text {
+  font-size: 0.95rem;
+  color: #666;
+}
+
+.user-name {
+  font-weight: 700;
+  color: #000;
+  margin-right: 4px;
+}
+
+.target-name {
+  font-weight: 700;
+  color: #001388; /* Azul do tema */
+}
+
+.log-time {
+  font-size: 0.85rem;
+  color: #999;
+  white-space: nowrap;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .controls-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .filter-group {
+    flex-direction: column;
+  }
+  
+  .log-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .log-time {
+    align-self: flex-end;
+  }
+}

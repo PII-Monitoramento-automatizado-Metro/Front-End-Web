@@ -449,3 +449,12 @@
 .modal-overlay {
   z-index: 3000 !important; /* Força ele a ficar ACIMA de tudo, inclusive setas e header */
 }
+
+
+.upload-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: auto;
+}

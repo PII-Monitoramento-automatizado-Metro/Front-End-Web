@@ -13,96 +13,111 @@ import { listObrasRequest } from "../services/httpsRequests";
 import type { ObraType } from "../types/Obra";
 import "./AreaGraphic.css";
 
+// Tipo do dado do gráfico
 type ChartData = {
-  name: string; // Será "jan/24", "fev/25"...
-  expectativa: number | null;
-  real: number | null;
-  fullDate: string; // Para tooltip detalhado
+  name: string; // Rótulo (ex: "jan/24")
+  expectativa: number | null; // Nulo por enquanto (Reservado para IA)
+  real: number | null; // Calculado linearmente (Histórico)
+  fullDate: string; // Data completa para o tooltip
 };
 
-// --- LÓGICA DE GERAÇÃO DE DADOS ---
+// --- FUNÇÃO PARA GERAR DADOS REAIS (SIMULAÇÃO LINEAR) ---
 const generateRealData = (obra: ObraType): ChartData[] => {
   if (!obra.data_inicio) return [];
 
-  // Normaliza datas
+  // 1. Normalizar Datas (Garante formato correto e evita bugs de fuso)
   const fixDate = (d: string) =>
     new Date(d.includes("T") ? d : d + "T00:00:00");
 
   const start = fixDate(obra.data_inicio);
   const now = new Date();
+
+  // Se não tiver data final, projeta 1 ano para frente a partir de hoje
   const end = obra.data_final
     ? fixDate(obra.data_final)
-    : new Date(new Date().setFullYear(new Date().getFullYear() + 1));
+    : new Date(new Date().setFullYear(now.getFullYear() + 1));
 
   if (isNaN(start.getTime())) return [];
 
   const data: ChartData[] = [];
 
-  // Calcula duração total em meses
-  const totalMonthsDuration =
+  // 2. Calcular duração total em meses para desenhar o eixo X completo
+  const totalDurationMonths =
     (end.getFullYear() - start.getFullYear()) * 12 +
     (end.getMonth() - start.getMonth());
-  const monthsToRender = Math.max(totalMonthsDuration + 2, 6);
 
-  // Calcula progresso mensal
+  // Garante pelo menos 6 meses de gráfico para visualização
+  const monthsToRender = Math.max(totalDurationMonths + 2, 6);
+
+  // 3. Calcular ritmo de progresso (Média por mês do início até HOJE)
   const monthsPassedSinceStart =
     (now.getFullYear() - start.getFullYear()) * 12 +
     (now.getMonth() - start.getMonth());
   const currentProgress = obra.progresso_atual || 0;
+
+  // Incremento médio por mês
   const progressPerMonth =
     monthsPassedSinceStart > 0 ? currentProgress / monthsPassedSinceStart : 0;
 
   let simulatedProgress = 0;
 
+  // 4. Loop para gerar cada ponto do gráfico
   for (let i = 0; i <= monthsToRender; i++) {
+    // Cria a data do mês atual do loop
     const loopDate = new Date(start);
     loopDate.setMonth(start.getMonth() + i);
 
-    // --- AQUI ESTÁ A MUDANÇA PARA "jan/26" ---
-    // 1. Pega o mês curto (ex: "jan") e remove o ponto se houver (alguns browsers põem "jan.")
+    // Formata rótulo: "jan/24"
+    // .replace('.', '') remove ponto abreviado que alguns navegadores colocam
     const monthName = loopDate
       .toLocaleString("pt-BR", { month: "short" })
       .replace(".", "");
-    // 2. Pega os últimos 2 dígitos do ano (ex: "26")
     const yearShort = loopDate.getFullYear().toString().slice(-2);
-    // 3. Monta a string
-    const monthLabel = `${monthName}/${yearShort}`;
+    const label = `${monthName}/${yearShort}`;
 
     let realVal: number | null = null;
 
-    if (loopDate <= now) {
-      if (i === 0) realVal = 0;
-      else if (i === monthsPassedSinceStart) realVal = currentProgress;
-      else realVal = Math.min(Math.round(simulatedProgress), currentProgress);
+    // Lógica de preenchimento da linha "Real":
+    // Só preenche se a data do loop for anterior ou igual ao mês atual
+    const isPastOrPresent =
+      loopDate < now ||
+      (loopDate.getMonth() === now.getMonth() &&
+        loopDate.getFullYear() === now.getFullYear());
 
+    if (isPastOrPresent) {
+      if (i === 0) {
+        realVal = 0; // Começa sempre em 0
+      } else if (i >= monthsPassedSinceStart) {
+        realVal = currentProgress; // No mês atual, usa o valor exato do banco
+      } else {
+        // Nos meses entre o início e hoje, cria a rampa linear
+        realVal = Math.min(Math.round(simulatedProgress), currentProgress);
+      }
       simulatedProgress += progressPerMonth;
     }
 
     data.push({
-      name: monthLabel,
-      fullDate: loopDate.toLocaleDateString("pt-BR"),
-      expectativa: null,
+      name: label,
+      expectativa: null, // Futuro (IA)
       real: realVal,
+      fullDate: loopDate.toLocaleDateString("pt-BR"),
     });
   }
 
   return data;
 };
 
+// --- TOOLTIP CUSTOMIZADO (Mostra data completa) ---
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     const itemReal = payload.find((p: any) => p.dataKey === "real");
-    const fullDate = payload[0].payload.fullDate;
+    const dateInfo = payload[0]?.payload?.fullDate || label;
 
     return (
       <div className="custom-tooltip">
         <p className="tooltip-label" style={{ marginBottom: 5 }}>
-          {label}
+          {dateInfo}
         </p>
-        <p style={{ fontSize: "0.75rem", color: "#ccc", marginBottom: 10 }}>
-          {fullDate}
-        </p>
-
         <div className="tooltip-item">
           <span className="dot" style={{ backgroundColor: "#001388" }}></span>
           <span>
@@ -110,6 +125,12 @@ const CustomTooltip = ({ active, payload, label }: any) => {
             <strong>
               {itemReal?.value != null ? `${itemReal.value}%` : "Futuro"}
             </strong>
+          </span>
+        </div>
+        <div className="tooltip-item">
+          <span className="dot" style={{ backgroundColor: "#9EA8E2" }}></span>
+          <span>
+            Expectativa: <strong>IA (Em breve)</strong>
           </span>
         </div>
       </div>
@@ -123,12 +144,14 @@ export default function AreaGraphic() {
   const [selectedObraId, setSelectedObraId] = useState<string>("");
   const [chartData, setChartData] = useState<ChartData[]>([]);
 
+  // 1. Carrega todas as obras do banco ao iniciar
   useEffect(() => {
     const loadObras = async () => {
       try {
         const data = await listObrasRequest();
         setObras(data);
         if (data.length > 0) {
+          // Seleciona a primeira obra automaticamente
           setSelectedObraId(data[0].id);
         }
       } catch (error) {
@@ -138,6 +161,7 @@ export default function AreaGraphic() {
     loadObras();
   }, []);
 
+  // 2. Recalcula o gráfico sempre que mudar a obra selecionada
   useEffect(() => {
     const obra = obras.find((o) => o.id === selectedObraId);
     if (obra) {
@@ -152,14 +176,15 @@ export default function AreaGraphic() {
         <div className="header-left">
           <h3>Evolução da Obra</h3>
 
+          {/* Dropdown para selecionar a obra */}
           <FormControl sx={{ minWidth: 200 }}>
             <Select
               value={selectedObraId}
               onChange={(e) => setSelectedObraId(e.target.value)}
               displayEmpty
               MenuProps={{
-                disableScrollLock: true,
-                style: { zIndex: 900 },
+                disableScrollLock: true, // Impede que a página trave o scroll
+                style: { zIndex: 900 }, // Fica abaixo da Navbar fixa
                 PaperProps: {
                   sx: {
                     borderRadius: "12px",
@@ -189,7 +214,7 @@ export default function AreaGraphic() {
             >
               {obras.length === 0 ? (
                 <MenuItem disabled value="">
-                  Nenhuma obra
+                  Nenhuma obra cadastrada
                 </MenuItem>
               ) : (
                 obras.map((obra) => (
@@ -209,7 +234,7 @@ export default function AreaGraphic() {
           </div>
           <div className="legend-item-top">
             <span className="dot" style={{ backgroundColor: "#9EA8E2" }}></span>
-            <span>Expectativa</span>
+            <span>Expectativa (IA)</span>
           </div>
         </div>
       </div>
@@ -219,7 +244,7 @@ export default function AreaGraphic() {
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
               data={chartData}
-              margin={{ top: 10, right: 30, left: 10, bottom: 0 }}
+              margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
             >
               <defs>
                 <linearGradient id="colorReal" x1="0" y1="0" x2="0" y2="1">
@@ -238,7 +263,7 @@ export default function AreaGraphic() {
                 dataKey="name"
                 axisLine={false}
                 tickLine={false}
-                // ADICIONE 'as any' NO FINAL DO OBJETO
+                // Correção do TS (as any) e rotação para caber anos
                 tick={
                   {
                     fill: "#888",
@@ -247,7 +272,7 @@ export default function AreaGraphic() {
                     textAnchor: "end",
                   } as any
                 }
-                height={60}
+                height={60} // Altura extra para o texto inclinado
                 interval="preserveStartEnd"
                 dy={10}
               />
@@ -257,7 +282,7 @@ export default function AreaGraphic() {
                 tickLine={false}
                 tick={{ fill: "#888", fontSize: 12 }}
                 tickFormatter={(value) => `${value}%`}
-                domain={[0, 100]}
+                domain={[0, 100]} // Eixo Y fixo de 0 a 100%
               />
 
               <Tooltip
@@ -273,7 +298,7 @@ export default function AreaGraphic() {
                 fill="url(#colorReal)"
                 strokeWidth={3}
                 animationDuration={1500}
-                connectNulls
+                connectNulls // Conecta os pontos se houver falha
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -287,7 +312,9 @@ export default function AreaGraphic() {
               color: "#aaa",
             }}
           >
-            Aguardando dados da obra...
+            {obras.length === 0
+              ? "Cadastre uma obra para ver o gráfico."
+              : "Carregando dados..."}
           </div>
         )}
       </div>

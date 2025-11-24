@@ -1,4 +1,4 @@
-import type { LogType } from "../types/log";
+import type { LogType } from "../types/Log";
 import type { ObraType } from "../types/Obra";
 import type { UserResponse } from "../types/User";
 
@@ -244,5 +244,36 @@ export async function listLogsRequest(): Promise<LogType[]> {
   } catch (error) {
     console.error(error);
     return [];
+  }
+}
+
+// No arquivo services/httpsRequests.ts
+
+export async function analisarObraRequest(idObra: string, arquivos: File[], data: string) { // <--- Adicionado data
+  try {
+    const formData = new FormData();
+    formData.append("funcional_usuario", getFuncional());
+    formData.append("data", data); // <--- Envia a data para o Backend
+
+    if (arquivos && arquivos.length > 0) {
+      arquivos.forEach((arquivo) => {
+        formData.append("fotos_atuais", arquivo); 
+      });
+    }
+
+    const response = await fetch(`${BASE_URL}/obras/${idObra}/analisar`, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Erro na análise: ${errorText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Erro no analisarObraRequest:", error);
+    throw error;
   }
 }
