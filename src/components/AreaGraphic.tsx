@@ -13,62 +13,93 @@ import { listObrasRequest } from "../services/httpsRequests";
 import type { ObraType } from "../types/Obra";
 import "./AreaGraphic.css";
 
-// Tipo do dado do gráfico
 type ChartData = {
-  name: string; // Rótulo (ex: "jan/24")
-  expectativa: number | null; // Nulo por enquanto (Reservado para IA)
-  real: number | null; // Calculado linearmente (Histórico)
-  fullDate: string; // Data completa para o tooltip
+  name: string;
+  expectativa: number | null;
+  real: number | null;
+  fullDate: string;
 };
 
-// --- FUNÇÃO PARA GERAR DADOS REAIS (SIMULAÇÃO LINEAR) ---
+// Helper de data seguro
+const parseDataSafe = (dataStr: string | undefined) => {
+  if (!dataStr) return new Date();
+  if (dataStr.includes("T") || dataStr.includes("-")) {
+    const clean = dataStr.split("T")[0];
+    const parts = clean.split("-");
+    return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+  }
+  if (dataStr.includes("/")) {
+    const parts = dataStr.split("/");
+    return new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
+  }
+  return new Date(dataStr);
+};
+
 const generateRealData = (obra: ObraType): ChartData[] => {
   if (!obra.data_inicio) return [];
 
-  // 1. Normalizar Datas (Garante formato correto e evita bugs de fuso)
-  const fixDate = (d: string) =>
-    new Date(d.includes("T") ? d : d + "T00:00:00");
-
-  const start = fixDate(obra.data_inicio);
+  const start = parseDataSafe(obra.data_inicio);
   const now = new Date();
+  now.setHours(0, 0, 0, 0);
 
-  // Se não tiver data final, projeta 1 ano para frente a partir de hoje
-  const end = obra.data_final
-    ? fixDate(obra.data_final)
+  // 1. Descobre a Data Limite Real (Hoje ou último registro futuro)
+  let dataLimiteReal = now;
+  if (obra.registros && obra.registros.length > 0) {
+    obra.registros.forEach((reg) => {
+      const dataReg = parseDataSafe(reg.data);
+      if (dataReg > dataLimiteReal) {
+        dataLimiteReal = dataReg;
+      }
+    });
+  }
+
+  // 2. Define Fim Previsto
+  const endPrevisao = obra.data_final
+    ? parseDataSafe(obra.data_final)
     : new Date(new Date().setFullYear(now.getFullYear() + 1));
+
+  // O eixo X vai até o mais distante (Previsão ou Real)
+  const finalXAxis =
+    endPrevisao > dataLimiteReal ? endPrevisao : dataLimiteReal;
 
   if (isNaN(start.getTime())) return [];
 
   const data: ChartData[] = [];
 
-  // 2. Calcular duração total em meses para desenhar o eixo X completo
+  // 3. Cálculos de Duração
+  // Duração total do gráfico
   const totalDurationMonths =
-    (end.getFullYear() - start.getFullYear()) * 12 +
-    (end.getMonth() - start.getMonth());
-
-  // Garante pelo menos 6 meses de gráfico para visualização
+    (finalXAxis.getFullYear() - start.getFullYear()) * 12 +
+    (finalXAxis.getMonth() - start.getMonth());
   const monthsToRender = Math.max(totalDurationMonths + 2, 6);
 
-  // 3. Calcular ritmo de progresso (Média por mês do início até HOJE)
-  const monthsPassedSinceStart =
-    (now.getFullYear() - start.getFullYear()) * 12 +
-    (now.getMonth() - start.getMonth());
+  // Duração percorrida REAL
+  const monthsPassedReal =
+    (dataLimiteReal.getFullYear() - start.getFullYear()) * 12 +
+    (dataLimiteReal.getMonth() - start.getMonth());
+
+  // Duração do PRAZO (Início até Prazo)
+  // CORREÇÃO: Math.max(..., 1) impede divisão por zero se a obra for de 1 mês só
+  const monthsDurationProjected = Math.max(
+    (endPrevisao.getFullYear() - start.getFullYear()) * 12 +
+      (endPrevisao.getMonth() - start.getMonth()),
+    1
+  );
+
   const currentProgress = obra.progresso_atual || 0;
 
-  // Incremento médio por mês
-  const progressPerMonth =
-    monthsPassedSinceStart > 0 ? currentProgress / monthsPassedSinceStart : 0;
+  // Ritmos de crescimento
+  const progressPerMonthReal =
+    monthsPassedReal > 0 ? currentProgress / monthsPassedReal : 0;
+  const progressPerMonthIdeal = 100 / monthsDurationProjected; // Agora seguro
 
   let simulatedProgress = 0;
 
-  // 4. Loop para gerar cada ponto do gráfico
+  // 4. Loop de Geração
   for (let i = 0; i <= monthsToRender; i++) {
-    // Cria a data do mês atual do loop
     const loopDate = new Date(start);
     loopDate.setMonth(start.getMonth() + i);
 
-    // Formata rótulo: "jan/24"
-    // .replace('.', '') remove ponto abreviado que alguns navegadores colocam
     const monthName = loopDate
       .toLocaleString("pt-BR", { month: "short" })
       .replace(".", "");
@@ -76,29 +107,33 @@ const generateRealData = (obra: ObraType): ChartData[] => {
     const label = `${monthName}/${yearShort}`;
 
     let realVal: number | null = null;
+    let idealVal: number | null = null;
 
-    // Lógica de preenchimento da linha "Real":
-    // Só preenche se a data do loop for anterior ou igual ao mês atual
-    const isPastOrPresent =
-      loopDate < now ||
-      (loopDate.getMonth() === now.getMonth() &&
-        loopDate.getFullYear() === now.getFullYear());
+    loopDate.setHours(0, 0, 0, 0);
 
-    if (isPastOrPresent) {
-      if (i === 0) {
-        realVal = 0; // Começa sempre em 0
-      } else if (i >= monthsPassedSinceStart) {
-        realVal = currentProgress; // No mês atual, usa o valor exato do banco
-      } else {
-        // Nos meses entre o início e hoje, cria a rampa linear
-        realVal = Math.min(Math.round(simulatedProgress), currentProgress);
-      }
-      simulatedProgress += progressPerMonth;
+    // --- Linha Real (Azul Escuro) ---
+    if (loopDate <= dataLimiteReal) {
+      if (i === 0) realVal = 0;
+      else if (i >= monthsPassedReal) realVal = currentProgress;
+      else realVal = Math.min(Math.round(simulatedProgress), currentProgress);
+
+      simulatedProgress += progressPerMonthReal;
     }
+
+    // --- Linha Expectativa (Azul Claro) ---
+    // Calcula onde deveria estar (0 a 100%)
+    let calcIdeal = i * progressPerMonthIdeal;
+
+    // Se a data do loop passou da data final prevista, trava em 100%
+    if (loopDate > endPrevisao) {
+      calcIdeal = 100;
+    }
+
+    idealVal = Math.min(Math.round(calcIdeal), 100); // Nunca passa de 100
 
     data.push({
       name: label,
-      expectativa: null, // Futuro (IA)
+      expectativa: idealVal,
       real: realVal,
       fullDate: loopDate.toLocaleDateString("pt-BR"),
     });
@@ -107,10 +142,12 @@ const generateRealData = (obra: ObraType): ChartData[] => {
   return data;
 };
 
-// --- TOOLTIP CUSTOMIZADO (Mostra data completa) ---
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     const itemReal = payload.find((p: any) => p.dataKey === "real");
+    const itemExpectativa = payload.find(
+      (p: any) => p.dataKey === "expectativa"
+    );
     const dateInfo = payload[0]?.payload?.fullDate || label;
 
     return (
@@ -118,6 +155,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         <p className="tooltip-label" style={{ marginBottom: 5 }}>
           {dateInfo}
         </p>
+
         <div className="tooltip-item">
           <span className="dot" style={{ backgroundColor: "#001388" }}></span>
           <span>
@@ -127,10 +165,16 @@ const CustomTooltip = ({ active, payload, label }: any) => {
             </strong>
           </span>
         </div>
+
         <div className="tooltip-item">
           <span className="dot" style={{ backgroundColor: "#9EA8E2" }}></span>
           <span>
-            Expectativa: <strong>IA (Em breve)</strong>
+            Expectativa:{" "}
+            <strong>
+              {itemExpectativa?.value != null
+                ? `${itemExpectativa.value}%`
+                : "N/A"}
+            </strong>
           </span>
         </div>
       </div>
@@ -144,16 +188,12 @@ export default function AreaGraphic() {
   const [selectedObraId, setSelectedObraId] = useState<string>("");
   const [chartData, setChartData] = useState<ChartData[]>([]);
 
-  // 1. Carrega todas as obras do banco ao iniciar
   useEffect(() => {
     const loadObras = async () => {
       try {
         const data = await listObrasRequest();
         setObras(data);
-        if (data.length > 0) {
-          // Seleciona a primeira obra automaticamente
-          setSelectedObraId(data[0].id);
-        }
+        if (data.length > 0) setSelectedObraId(data[0].id);
       } catch (error) {
         console.error("Erro ao carregar obras gráfico:", error);
       }
@@ -161,7 +201,6 @@ export default function AreaGraphic() {
     loadObras();
   }, []);
 
-  // 2. Recalcula o gráfico sempre que mudar a obra selecionada
   useEffect(() => {
     const obra = obras.find((o) => o.id === selectedObraId);
     if (obra) {
@@ -175,16 +214,14 @@ export default function AreaGraphic() {
       <div className="area-header">
         <div className="header-left">
           <h3>Evolução da Obra</h3>
-
-          {/* Dropdown para selecionar a obra */}
           <FormControl sx={{ minWidth: 200 }}>
             <Select
               value={selectedObraId}
               onChange={(e) => setSelectedObraId(e.target.value)}
               displayEmpty
               MenuProps={{
-                disableScrollLock: true, // Impede que a página trave o scroll
-                style: { zIndex: 900 }, // Fica abaixo da Navbar fixa
+                disableScrollLock: true,
+                style: { zIndex: 900 },
                 PaperProps: {
                   sx: {
                     borderRadius: "12px",
@@ -234,7 +271,7 @@ export default function AreaGraphic() {
           </div>
           <div className="legend-item-top">
             <span className="dot" style={{ backgroundColor: "#9EA8E2" }}></span>
-            <span>Expectativa (IA)</span>
+            <span>Expectativa</span>
           </div>
         </div>
       </div>
@@ -251,19 +288,27 @@ export default function AreaGraphic() {
                   <stop offset="5%" stopColor="#001388" stopOpacity={0.8} />
                   <stop offset="95%" stopColor="#001388" stopOpacity={0} />
                 </linearGradient>
+                {/* Ajustei a opacidade da expectativa para ficar visível no fundo */}
+                <linearGradient
+                  id="colorExpectativa"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
+                  <stop offset="5%" stopColor="#9EA8E2" stopOpacity={0.6} />
+                  <stop offset="95%" stopColor="#9EA8E2" stopOpacity={0.1} />
+                </linearGradient>
               </defs>
-
               <CartesianGrid
                 strokeDasharray="3 3"
                 vertical={false}
                 stroke="#f0f0f0"
               />
-
               <XAxis
                 dataKey="name"
                 axisLine={false}
                 tickLine={false}
-                // Correção do TS (as any) e rotação para caber anos
                 tick={
                   {
                     fill: "#888",
@@ -272,24 +317,36 @@ export default function AreaGraphic() {
                     textAnchor: "end",
                   } as any
                 }
-                height={60} // Altura extra para o texto inclinado
+                height={60}
                 interval="preserveStartEnd"
                 dy={10}
               />
-
               <YAxis
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: "#888", fontSize: 12 }}
                 tickFormatter={(value) => `${value}%`}
-                domain={[0, 100]} // Eixo Y fixo de 0 a 100%
+                domain={[0, 100]}
               />
-
               <Tooltip
                 content={<CustomTooltip />}
                 cursor={{ stroke: "#ccc", strokeDasharray: "5 5" }}
               />
 
+              {/* EXPECTATIVA (Fundo) - Agora aparece sempre */}
+              <Area
+                type="monotone"
+                dataKey="expectativa"
+                stroke="#9EA8E2"
+                fillOpacity={1}
+                fill="url(#colorExpectativa)"
+                strokeWidth={2}
+                // strokeDasharray="5 5" // Removi o tracejado para ficar mais sólido e visível
+                animationDuration={1500}
+                activeDot={{ r: 4 }}
+              />
+
+              {/* REAL (Frente) */}
               <Area
                 type="monotone"
                 dataKey="real"
@@ -298,7 +355,9 @@ export default function AreaGraphic() {
                 fill="url(#colorReal)"
                 strokeWidth={3}
                 animationDuration={1500}
-                connectNulls // Conecta os pontos se houver falha
+                connectNulls
+                activeDot={{ r: 6 }}
+                dot={{ r: 4, fill: "#001388", strokeWidth: 0 }}
               />
             </AreaChart>
           </ResponsiveContainer>
