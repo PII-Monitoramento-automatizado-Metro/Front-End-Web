@@ -98,21 +98,6 @@ function Navbar() {
               <strong>{nomeUsuario || "Visitante"}</strong>
             </div>
           </div>
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 10 6"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M1 1L5 5L9 1"
-              stroke="#333"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
         </div>
         <button type="submit" className="logout-button" onClick={handleLogout}>
           Log Out

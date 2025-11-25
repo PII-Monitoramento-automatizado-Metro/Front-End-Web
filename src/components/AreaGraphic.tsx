@@ -40,103 +40,88 @@ const generateRealData = (obra: ObraType): ChartData[] => {
 
   const start = parseDataSafe(obra.data_inicio);
   const now = new Date();
-  now.setHours(0, 0, 0, 0);
+  now.setHours(0,0,0,0);
 
   // 1. Descobre a Data Limite Real (Hoje ou último registro futuro)
   let dataLimiteReal = now;
   if (obra.registros && obra.registros.length > 0) {
-    obra.registros.forEach((reg) => {
-      const dataReg = parseDataSafe(reg.data);
-      if (dataReg > dataLimiteReal) {
-        dataLimiteReal = dataReg;
-      }
-    });
+      obra.registros.forEach(reg => {
+          const dataReg = parseDataSafe(reg.data);
+          if (dataReg > dataLimiteReal) {
+              dataLimiteReal = dataReg;
+          }
+      });
   }
 
   // 2. Define Fim Previsto
-  const endPrevisao = obra.data_final
-    ? parseDataSafe(obra.data_final)
-    : new Date(new Date().setFullYear(now.getFullYear() + 1));
-
+  const endPrevisao = obra.data_final ? parseDataSafe(obra.data_final) : new Date(new Date().setFullYear(now.getFullYear() + 1));
+  
   // O eixo X vai até o mais distante (Previsão ou Real)
-  const finalXAxis =
-    endPrevisao > dataLimiteReal ? endPrevisao : dataLimiteReal;
+  const finalXAxis = endPrevisao > dataLimiteReal ? endPrevisao : dataLimiteReal;
 
   if (isNaN(start.getTime())) return [];
 
   const data: ChartData[] = [];
 
   // 3. Cálculos de Duração
-  // Duração total do gráfico
-  const totalDurationMonths =
-    (finalXAxis.getFullYear() - start.getFullYear()) * 12 +
-    (finalXAxis.getMonth() - start.getMonth());
-  const monthsToRender = Math.max(totalDurationMonths + 2, 6);
+  const totalDurationMonths = (finalXAxis.getFullYear() - start.getFullYear()) * 12 + (finalXAxis.getMonth() - start.getMonth());
+  const monthsToRender = Math.max(totalDurationMonths + 2, 6); 
 
-  // Duração percorrida REAL
-  const monthsPassedReal =
-    (dataLimiteReal.getFullYear() - start.getFullYear()) * 12 +
-    (dataLimiteReal.getMonth() - start.getMonth());
-
-  // Duração do PRAZO (Início até Prazo)
-  // CORREÇÃO: Math.max(..., 1) impede divisão por zero se a obra for de 1 mês só
-  const monthsDurationProjected = Math.max(
-    (endPrevisao.getFullYear() - start.getFullYear()) * 12 +
-      (endPrevisao.getMonth() - start.getMonth()),
-    1
-  );
+  const monthsPassedReal = (dataLimiteReal.getFullYear() - start.getFullYear()) * 12 + (dataLimiteReal.getMonth() - start.getMonth());
+  
+  // Garante no mínimo 1 mês de duração para evitar divisão por zero
+  const diffMonthsProjected = (endPrevisao.getFullYear() - start.getFullYear()) * 12 + (endPrevisao.getMonth() - start.getMonth());
+  const monthsDurationProjected = Math.max(diffMonthsProjected, 1);
 
   const currentProgress = obra.progresso_atual || 0;
-
-  // Ritmos de crescimento
-  const progressPerMonthReal =
-    monthsPassedReal > 0 ? currentProgress / monthsPassedReal : 0;
-  const progressPerMonthIdeal = 100 / monthsDurationProjected; // Agora seguro
+  
+  const progressPerMonthReal = monthsPassedReal > 0 ? currentProgress / monthsPassedReal : 0;
+  const progressPerMonthIdeal = 100 / monthsDurationProjected; 
 
   let simulatedProgress = 0;
 
   // 4. Loop de Geração
   for (let i = 0; i <= monthsToRender; i++) {
-    const loopDate = new Date(start);
-    loopDate.setMonth(start.getMonth() + i);
+      const loopDate = new Date(start);
+      loopDate.setMonth(start.getMonth() + i);
 
-    const monthName = loopDate
-      .toLocaleString("pt-BR", { month: "short" })
-      .replace(".", "");
-    const yearShort = loopDate.getFullYear().toString().slice(-2);
-    const label = `${monthName}/${yearShort}`;
+      const monthName = loopDate.toLocaleString('pt-BR', { month: 'short' }).replace('.', '');
+      const yearShort = loopDate.getFullYear().toString().slice(-2);
+      const label = `${monthName}/${yearShort}`;
 
-    let realVal: number | null = null;
-    let idealVal: number | null = null;
+      let realVal: number | null = null;
+      let idealVal: number | null = null;
+      
+      loopDate.setHours(0,0,0,0);
 
-    loopDate.setHours(0, 0, 0, 0);
+      // --- MUDANÇA AQUI: LINHA REAL CONTÍNUA ---
+      
+      if (loopDate <= dataLimiteReal) {
+          // Se está no passado/presente (antes do último registro)
+          if (i === 0) realVal = 0;
+          else if (i >= monthsPassedReal) realVal = currentProgress;
+          else realVal = Math.min(Math.round(simulatedProgress), currentProgress);
+          
+          simulatedProgress += progressPerMonthReal;
+      } else {
+          // Se está no futuro (depois do último registro),
+          // MANTÉM O VALOR ATUAL (LINHA RETA) em vez de parar.
+          realVal = currentProgress; 
+      }
 
-    // --- Linha Real (Azul Escuro) ---
-    if (loopDate <= dataLimiteReal) {
-      if (i === 0) realVal = 0;
-      else if (i >= monthsPassedReal) realVal = currentProgress;
-      else realVal = Math.min(Math.round(simulatedProgress), currentProgress);
+      // --- Linha Expectativa ---
+      let calcIdeal = i * progressPerMonthIdeal;
+      if (loopDate > endPrevisao) {
+           calcIdeal = 100;
+      }
+      idealVal = Math.min(Math.round(calcIdeal), 100);
 
-      simulatedProgress += progressPerMonthReal;
-    }
-
-    // --- Linha Expectativa (Azul Claro) ---
-    // Calcula onde deveria estar (0 a 100%)
-    let calcIdeal = i * progressPerMonthIdeal;
-
-    // Se a data do loop passou da data final prevista, trava em 100%
-    if (loopDate > endPrevisao) {
-      calcIdeal = 100;
-    }
-
-    idealVal = Math.min(Math.round(calcIdeal), 100); // Nunca passa de 100
-
-    data.push({
-      name: label,
-      expectativa: idealVal,
-      real: realVal,
-      fullDate: loopDate.toLocaleDateString("pt-BR"),
-    });
+      data.push({
+          name: label,
+          expectativa: idealVal,
+          real: realVal,
+          fullDate: loopDate.toLocaleDateString('pt-BR')
+      });
   }
 
   return data;
@@ -335,7 +320,7 @@ export default function AreaGraphic() {
 
               {/* EXPECTATIVA (Fundo) - Agora aparece sempre */}
               <Area
-                type="monotone"
+                type="linear"
                 dataKey="expectativa"
                 stroke="#9EA8E2"
                 fillOpacity={1}
@@ -348,7 +333,7 @@ export default function AreaGraphic() {
 
               {/* REAL (Frente) */}
               <Area
-                type="monotone"
+                type="linear"
                 dataKey="real"
                 stroke="#001388"
                 fillOpacity={1}

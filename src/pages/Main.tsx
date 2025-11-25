@@ -342,7 +342,6 @@ function MainPage() {
                     <span className="log-user">{log.user}</span> {log.action}{" "}
                     <strong className="log-target">{log.target}</strong>
                   </p>
-                  <img src={seta} alt="" />
                 </li>
               ))
             )}
